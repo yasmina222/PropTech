@@ -1,0 +1,59 @@
+# School Research Assistant - Dependencies (v2)
+
+# Install with: pip install -r requirements_v2.txt
+
+
+# Core LangChain packages
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0          # For GPT models
+langchain-anthropic>=0.2.0       # For Claude models
+
+# Data validation
+pydantic>=2.0.0
+
+# Web framework
+streamlit>=1.28.0
+
+# Data processing
+pandas>=2.0.0
+openpyxl>=3.1.0                  # Excel export
+
+# Environment management
+python-dotenv>=1.0.0
+
+# HTTP client
+requests>=2.31.0
+aiohttp>=3.9.0                   # For async HTTP
+
+# PDF processing (for future Ofsted PDF analysis)
+PyPDF2>=3.0.0
+
+# Phone number validation
+phonenumbers>=8.13.0
+
+# DNS validation for emails
+dnspython>=2.4.0
+
+# HTML parsing
+beautifulsoup4>=4.12.0
+
+
+# OPTIONAL: For future phases
+
+
+# Vector store (Phase 2 - for 24K schools search)
+# chromadb>=0.4.0
+# faiss-cpu>=1.7.0
+
+# Databricks connection (Phase 2)
+# databricks-sql-connector>=3.0.0
+
+# MLflow (Phase 4)
+# mlflow>=2.10.0
+
+# Firecrawl (if you still want live scraping)
+# firecrawl-py>=1.0.0
+
+# NOTE: If using Claude, you need ANTHROPIC_API_KEY in your .env
+# If using OpenAI, you need OPENAI_API_KEY in your .env
