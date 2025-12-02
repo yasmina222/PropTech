@@ -48,7 +48,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    /* Main title styling */
+    /* Main title styling - used across all pages */
     .main-title {
         font-family: 'Inter', sans-serif;
         font-size: 2.5rem;
@@ -65,14 +65,15 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     
-    /* Section headers */
+    /* Section headers - consistent with main title */
     .section-title {
         font-family: 'Inter', sans-serif;
         font-size: 1.5rem;
-        font-weight: 600;
+        font-weight: 400;
         color: #ffffff;
         margin-top: 1.5rem;
         margin-bottom: 0.5rem;
+        letter-spacing: -0.3px;
     }
     
     .section-subtitle {
@@ -80,6 +81,23 @@ st.markdown("""
         font-size: 0.875rem;
         color: #6b7280;
         margin-bottom: 1rem;
+    }
+    
+    /* Deep dive header - matches main title style */
+    .deep-dive-header {
+        font-family: 'Inter', sans-serif;
+        font-size: 2rem;
+        font-weight: 300;
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+    
+    /* All h1, h2, h3 elements should use Inter */
+    .stApp h1, .stApp h2, .stApp h3 {
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 300 !important;
+        letter-spacing: -0.3px;
     }
     
     /* Search box styling */
@@ -135,6 +153,7 @@ st.markdown("""
         font-weight: 500;
         color: #ffffff;
         margin-bottom: 0.25rem;
+        letter-spacing: -0.2px;
     }
     
     .school-urn {
@@ -233,9 +252,10 @@ st.markdown("""
     .sidebar-title {
         font-family: 'Inter', sans-serif;
         font-size: 1.25rem;
-        font-weight: 600;
+        font-weight: 400;
         color: #ffffff;
         margin-bottom: 1rem;
+        letter-spacing: -0.2px;
     }
     
     .metric-grid {
@@ -274,9 +294,10 @@ st.markdown("""
     .shortlist-header {
         font-family: 'Inter', sans-serif;
         font-size: 0.875rem;
-        font-weight: 600;
+        font-weight: 500;
         color: #ffffff;
         margin-bottom: 0.75rem;
+        letter-spacing: 0.02em;
     }
     
     .shortlist-empty {
@@ -313,12 +334,13 @@ st.markdown("""
     
     .info-card-title {
         font-family: 'Inter', sans-serif;
-        font-size: 1rem;
-        font-weight: 600;
+        font-size: 1.1rem;
+        font-weight: 400;
         color: #ffffff;
         margin-bottom: 1rem;
         padding-bottom: 0.5rem;
         border-bottom: 1px solid #4a5568;
+        letter-spacing: -0.2px;
     }
     
     .info-row {
@@ -368,10 +390,11 @@ st.markdown("""
     
     .starter-topic {
         font-family: 'Inter', sans-serif;
-        font-size: 0.9rem;
-        font-weight: 600;
+        font-size: 1rem;
+        font-weight: 500;
         color: #ffffff;
         margin-bottom: 0.5rem;
+        letter-spacing: -0.2px;
     }
     
     .starter-detail {
@@ -685,17 +708,43 @@ def render_list_view(schools: list, search_query: str = ""):
     
     # Search section
     st.markdown('<div class="section-title">Search Schools</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">Select a school</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">Select a school or type to filter the list</div>', unsafe_allow_html=True)
     
-    search_query = st.text_input(
-        "Search",
-        placeholder="Search by name...",
-        label_visibility="collapsed"
-    )
+    # Create two search options: dropdown select (primary) + text filter
+    search_col1, search_col2 = st.columns([2, 2])
+    
+    with search_col1:
+        # Primary: Searchable dropdown to select school directly
+        school_names = ["-- Select a school --"] + sorted([s.school_name for s in schools])
+        selected_school = st.selectbox(
+            "Select School",
+            options=school_names,
+            index=0,
+            label_visibility="collapsed",
+            key="school_quick_select"
+        )
+        
+        # If school selected from dropdown, go directly to deep dive
+        if selected_school and selected_school != "-- Select a school --":
+            selected = next((s for s in schools if s.school_name == selected_school), None)
+            if selected:
+                st.session_state.view = "deep_dive"
+                st.session_state.selected_urn = selected.urn
+                st.rerun()
+    
+    with search_col2:
+        # Secondary: Text filter for the table below
+        search_query = st.text_input(
+            "Filter list",
+            placeholder="Type to filter table...",
+            label_visibility="collapsed",
+            key=f"school_filter_{datetime.now().microsecond}"  # Unique key to prevent autocomplete
+        )
     
     # Filter schools by search
     if search_query:
         filtered_schools = [s for s in schools if search_query.lower() in s.school_name.lower()]
+        st.caption(f"Showing {len(filtered_schools)} schools matching '{search_query}'")
     else:
         filtered_schools = schools
     
@@ -768,14 +817,15 @@ def render_list_view(schools: list, search_query: str = ""):
 def render_deep_dive(school: School, service):
     """Render the deep dive page for a specific school"""
     
-    # Back button
-    if st.button("← Back to Search"):
+    # Back button - must clear URL params too!
+    if st.button("← Back to Search", type="primary"):
         st.session_state.view = "list"
         st.session_state.selected_urn = None
+        st.query_params.clear()  # Clear URL params so they don't override session state
         st.rerun()
     
-    # School header
-    st.markdown(f'<div class="deep-dive-header">{school.school_name}</div>', unsafe_allow_html=True)
+    # School header - using same font style as main title
+    st.markdown(f'<div class="main-title" style="font-size: 2rem; font-weight: 500; margin-top: 0.5rem;">{school.school_name}</div>', unsafe_allow_html=True)
     
     # Quick stats row
     col1, col2, col3, col4, col5 = st.columns(5)
