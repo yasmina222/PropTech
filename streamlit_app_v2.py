@@ -18,7 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from school_intelligence_service import get_intelligence_service
 from data_loader import get_data_loader
 from models_v2 import School, ConversationStarter
-from config_v2 import get_app_password, LLM_PROVIDER, FEATURES, get_display_label
+from config_v2 import LLM_PROVIDER, FEATURES, get_display_label
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
