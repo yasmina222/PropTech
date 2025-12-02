@@ -42,24 +42,7 @@ def init_session_state():
 
 
 def check_password() -> bool:
-    init_session_state()
-    
-    if st.session_state.authenticated:
-        return True
-    
-    st.title("School Research Assistant")
-    password = st.text_input("Enter Password", type="password", key="password_input")
-    
-    if st.button("Login", type="primary"):
-        if password == get_app_password():
-            st.session_state.authenticated = True
-            st.rerun()
-        else:
-            st.error("Incorrect password")
-    
-    st.caption("Contact IT for access credentials")
-    return False
-
+    return True
 
 def add_to_shortlist(school: School):
     if len(st.session_state.shortlist) >= MAX_SHORTLIST:
