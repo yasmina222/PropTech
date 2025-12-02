@@ -1,6 +1,6 @@
 """
-School Research Assistant - Streamlit App (v2)
-With SEND Opportunities Tab and Shortlist Feature
+School Research Assistant - Streamlit App (v3)
+Redesigned UI with Table View and Deep Dive Pages
 """
 
 import streamlit as st
@@ -25,24 +25,437 @@ logger = logging.getLogger(__name__)
 
 MAX_SHORTLIST = 15
 
+# =============================================================================
+# PAGE CONFIG & CUSTOM CSS
+# =============================================================================
+
 st.set_page_config(
     page_title="School Research Assistant",
     page_icon="🎓",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
+# Custom CSS for the new design
+st.markdown("""
+<style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global font and background */
+    .stApp {
+        background-color: #1a1d24;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Main title styling */
+    .main-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 300;
+        color: #ffffff;
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.5px;
+    }
+    
+    .main-subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        color: #6b7280;
+        margin-bottom: 2rem;
+    }
+    
+    /* Section headers */
+    .section-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .section-subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 1rem;
+    }
+    
+    /* Search box styling */
+    .stTextInput > div > div > input {
+        background-color: #2d3748;
+        border: 1px solid #4a5568;
+        border-radius: 8px;
+        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+        padding: 0.75rem 1rem;
+    }
+    
+    .stTextInput > div > div > input::placeholder {
+        color: #6b7280;
+    }
+    
+    /* Table header */
+    .table-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 0.8fr 1fr;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #2d3748;
+        margin-bottom: 0.5rem;
+    }
+    
+    .table-header-cell {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    /* Table row */
+    .table-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 0.8fr 1fr;
+        padding: 1rem;
+        align-items: center;
+        border-bottom: 1px solid #2d3748;
+        transition: background-color 0.2s;
+    }
+    
+    .table-row:hover {
+        background-color: #2d3748;
+    }
+    
+    /* School name cell */
+    .school-name {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #ffffff;
+        margin-bottom: 0.25rem;
+    }
+    
+    .school-urn {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    /* Budget cell */
+    .budget-amount {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #ffffff;
+    }
+    
+    /* Local Authority cell */
+    .la-name {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        color: #d1d5db;
+    }
+    
+    /* Priority badges */
+    .priority-badge-high {
+        background-color: #dc2626;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .priority-badge-medium {
+        background-color: #f59e0b;
+        color: black;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .priority-badge-low {
+        background-color: #10b981;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    /* NEW badge */
+    .new-badge {
+        background-color: #10b981;
+        color: white;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        display: inline-block;
+    }
+    
+    /* Deep dive link */
+    .deep-dive-link {
+        color: #60a5fa;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    
+    .deep-dive-link:hover {
+        color: #93c5fd;
+        text-decoration: underline;
+    }
+    
+    /* Sidebar styling */
+    section[data-testid="stSidebar"] {
+        background-color: #1a1d24;
+        border-right: 1px solid #2d3748;
+    }
+    
+    section[data-testid="stSidebar"] .stMarkdown {
+        color: #d1d5db;
+    }
+    
+    .sidebar-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 1rem;
+    }
+    
+    .metric-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .metric-card {
+        background-color: transparent;
+    }
+    
+    .metric-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+    
+    .metric-value {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #ffffff;
+    }
+    
+    /* Shortlist section */
+    .shortlist-section {
+        background-color: #2d3748;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .shortlist-header {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 0.75rem;
+    }
+    
+    .shortlist-empty {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    
+    /* Deep dive page styling */
+    .deep-dive-header {
+        font-family: 'Inter', sans-serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+    }
+    
+    .back-link {
+        color: #60a5fa;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        cursor: pointer;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+    
+    /* Info cards */
+    .info-card {
+        background-color: #2d3748;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .info-card-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #4a5568;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #374151;
+    }
+    
+    .info-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        color: #9ca3af;
+    }
+    
+    .info-value {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        color: #ffffff;
+        font-weight: 500;
+    }
+    
+    /* Conversation starter cards */
+    .starter-card {
+        background-color: #374151;
+        border-left: 4px solid #3b82f6;
+        padding: 1rem;
+        margin: 0.75rem 0;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .starter-card-ofsted {
+        background-color: #374151;
+        border-left: 4px solid #f97316;
+        padding: 1rem;
+        margin: 0.75rem 0;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .starter-card-send {
+        background-color: #374151;
+        border-left: 4px solid #06b6d4;
+        padding: 1rem;
+        margin: 0.75rem 0;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .starter-topic {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+    }
+    
+    .starter-detail {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        color: #d1d5db;
+        line-height: 1.6;
+    }
+    
+    .starter-source {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 0.5rem;
+    }
+    
+    /* SEN badges */
+    .sen-badge {
+        background-color: #7c3aed;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+    
+    /* Hide default Streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Button styling */
+    .stButton > button {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+    }
+    
+    .stButton > button:hover {
+        background-color: #2563eb;
+    }
+    
+    /* Checkbox styling */
+    .stCheckbox {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Selectbox styling */
+    .stSelectbox {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    div[data-baseweb="select"] {
+        font-family: 'Inter', sans-serif;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
+# =============================================================================
+# SESSION STATE
+# =============================================================================
 
 def init_session_state():
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     if "shortlist" not in st.session_state:
         st.session_state.shortlist = {}
-    if "selected_school" not in st.session_state:
-        st.session_state.selected_school = None
+    if "view" not in st.session_state:
+        st.session_state.view = "list"
+    if "selected_urn" not in st.session_state:
+        st.session_state.selected_urn = None
 
 
-def check_password() -> bool:
-    return True
+# =============================================================================
+# SHORTLIST FUNCTIONS
+# =============================================================================
 
 def add_to_shortlist(school: School):
     if len(st.session_state.shortlist) >= MAX_SHORTLIST:
@@ -68,6 +481,7 @@ def get_shortlist_schools() -> list:
 
 
 def export_shortlist_to_excel() -> bytes:
+    """Export shortlist to Excel file"""
     schools = get_shortlist_schools()
     
     summary_data = []
@@ -104,13 +518,11 @@ def export_shortlist_to_excel() -> bytes:
             "SEN Support": sen_support,
             "Has SEN Unit": has_sen_unit,
             "Has Resourced Provision": has_rp,
-            "Gov.uk Link": get_fbit_url(school.urn)
+            "Gov.uk Link": f"https://schools-financial-benchmarking.service.gov.uk/school?urn={school.urn}"
         })
         
         for starter in school.conversation_starters:
             source = starter.source or "Financial/School Data"
-            if starter.source and starter.source.startswith("http"):
-                source = starter.source
             starters_data.append({
                 "School Name": school.school_name,
                 "URN": school.urn,
@@ -127,199 +539,100 @@ def export_shortlist_to_excel() -> bytes:
         if starters_data:
             df_starters = pd.DataFrame(starters_data)
             df_starters.to_excel(writer, sheet_name='Conversation Starters', index=False)
-        else:
-            df_empty = pd.DataFrame([{"Note": "No conversation starters generated yet. Generate starters for each school first."}])
-            df_empty.to_excel(writer, sheet_name='Conversation Starters', index=False)
-        
-        for sheet_name in writer.sheets:
-            worksheet = writer.sheets[sheet_name]
-            for column in worksheet.columns:
-                max_length = 0
-                column_letter = column[0].column_letter
-                for cell in column:
-                    try:
-                        if len(str(cell.value)) > max_length:
-                            max_length = len(str(cell.value))
-                    except:
-                        pass
-                adjusted_width = min(max_length + 2, 60)
-                worksheet.column_dimensions[column_letter].width = adjusted_width
     
     output.seek(0)
     return output.getvalue()
 
 
-st.markdown("""
-<style>
-    .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6 {
-        color: #E8E8E8 !important;
-    }
-    .stApp p, .stApp span, .stApp label, .stApp div {
-        color: #D0D0D0 !important;
-    }
-    
-    div[data-baseweb="select"] li[aria-selected="true"],
-    div[data-baseweb="select"] li:hover {
-        background-color: #28a745 !important;
-    }
-    
-    .starter-card {
-        background-color: #2D2D3A;
-        border-left: 4px solid #0066ff;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 0 8px 8px 0;
-    }
-    .starter-card-ofsted {
-        background-color: #2D2D3A;
-        border-left: 4px solid #ff6600;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 0 8px 8px 0;
-    }
-    .starter-card-send {
-        background-color: #2D2D3A;
-        border-left: 4px solid #17a2b8;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 0 8px 8px 0;
-    }
-    .starter-detail {
-        color: #E0E0E0 !important;
-        line-height: 1.6;
-    }
-    .priority-high {
-        background-color: #dc3545;
-        color: white !important;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-    .priority-medium {
-        background-color: #ffc107;
-        color: black !important;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-    .priority-low {
-        background-color: #28a745;
-        color: white !important;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-    }
-    .send-highlight {
-        background-color: #1a3a4a;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 0.5rem 0;
-        border-left: 4px solid #17a2b8;
-    }
-    .sen-unit-badge {
-        background-color: #6f42c1;
-        color: white !important;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        margin-right: 0.5rem;
-    }
-    .staffing-spend-high {
-        background-color: #1a3d2a;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 0.5rem 0;
-        border-left: 4px solid #28a745;
-    }
-    .contact-card {
-        background-color: #2A3D4D;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 0.5rem 0;
-    }
-    .shortlist-section {
-        background-color: #2D3748;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 2px solid #4A5568;
-        margin: 0.5rem 0;
-    }
-    .shortlist-header {
-        color: #48BB78 !important;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-    .section-header {
-        background-color: #2D3748;
-        padding: 0.75rem 1rem;
-        border-radius: 6px;
-        margin: 1rem 0 0.5rem 0;
-        border-left: 4px solid #4A90D9;
-    }
-    .section-header-financial {
-        border-left-color: #0066ff;
-    }
-    .section-header-ofsted {
-        border-left-color: #ff6600;
-    }
-    .section-header-send {
-        border-left-color: #17a2b8;
-    }
-</style>
-""", unsafe_allow_html=True)
-
+# =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
 
 def get_fbit_url(urn: str) -> str:
     return f"https://schools-financial-benchmarking.service.gov.uk/school?urn={urn}"
 
 
-def main():
-    init_session_state()
-    service = get_intelligence_service()
-    data_loader = get_data_loader()
-    
-    st.title("Automate your Prospecting and Research so you can Focus on Selling")
-    st.caption("London Schools Dataset | Financial, Contact & SEND Intelligence")
-    
-    with st.spinner("Loading schools..."):
-        school_names = service.get_school_names()
-        stats = service.get_statistics()
-    
+def get_budget_display(school: School) -> str:
+    """Get formatted budget display"""
+    if school.financial and school.financial.total_teaching_support_costs:
+        return f"£{school.financial.total_teaching_support_costs:,.0f}"
+    return "N/A"
+
+
+def get_priority_badge(priority: str) -> str:
+    """Get HTML for priority badge"""
+    if priority == "HIGH":
+        return '<span class="priority-badge-high">HIGH</span>'
+    elif priority == "MEDIUM":
+        return '<span class="priority-badge-medium">MEDIUM</span>'
+    else:
+        return '<span class="priority-badge-low">LOW</span>'
+
+
+# =============================================================================
+# SIDEBAR
+# =============================================================================
+
+def render_sidebar(stats: dict, data_loader):
+    """Render the sidebar with dashboard metrics and filters"""
     with st.sidebar:
-        st.header("Dashboard")
+        st.markdown('<div class="sidebar-title">Dashboard</div>', unsafe_allow_html=True)
         
+        # Metrics grid
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Total Schools", f"{stats['total_schools']:,}")
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">Total Schools</div>
+                <div class="metric-value">{stats['total_schools']:,}</div>
+            </div>
+            """, unsafe_allow_html=True)
         with col2:
-            st.metric("High Priority", stats["high_priority"])
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">High Priority</div>
+                <div class="metric-value">{stats['high_priority']:,}</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         col3, col4 = st.columns(2)
         with col3:
-            st.metric("With Contacts", stats.get("with_contacts", 0))
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">With Contacts</div>
+                <div class="metric-value">{stats.get('with_contacts', 0):,}</div>
+            </div>
+            """, unsafe_allow_html=True)
         with col4:
-            st.metric("Local Authorities", stats.get("boroughs", 33))
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">Local Authorities</div>
+                <div class="metric-value">{stats.get('boroughs', 33)}</div>
+            </div>
+            """, unsafe_allow_html=True)
         
-        st.divider()
+        st.markdown("---")
         
-        st.subheader("Filter by Local Authority")
+        # Filters
+        st.markdown("**Filter by Local Authority**")
+        st.caption("Select Local Authority")
         local_authorities = data_loader.get_boroughs()
         selected_la = st.selectbox(
-            "Select Local Authority",
+            "Local Authority",
             options=["All Local Authorities"] + local_authorities,
-            index=0
+            index=0,
+            label_visibility="collapsed"
         )
         
-        st.divider()
+        # New customers filter (placeholder)
+        new_only = st.checkbox("New Customers only", value=False)
         
+        st.markdown("---")
+        
+        # Shortlist section
         st.markdown(f"""
         <div class="shortlist-section">
             <div class="shortlist-header">MY SHORTLIST ({len(st.session_state.shortlist)}/{MAX_SHORTLIST})</div>
-        </div>
         """, unsafe_allow_html=True)
         
         if st.session_state.shortlist:
@@ -327,417 +640,342 @@ def main():
                 school = item["school"]
                 col_name, col_remove = st.columns([4, 1])
                 with col_name:
-                    if st.button(school.school_name[:30], key=f"load_{urn}", help="Click to load school"):
-                        st.session_state.selected_school = school.school_name
+                    if st.button(f"📍 {school.school_name[:25]}...", key=f"load_{urn}"):
+                        st.session_state.view = "deep_dive"
+                        st.session_state.selected_urn = urn
                         st.rerun()
                 with col_remove:
-                    if st.button("X", key=f"remove_{urn}", help="Remove from shortlist"):
+                    if st.button("✕", key=f"remove_{urn}"):
                         remove_from_shortlist(urn)
                         st.rerun()
             
-            st.divider()
-            
+            st.markdown("---")
             excel_data = export_shortlist_to_excel()
             st.download_button(
-                label="Download Shortlist (Excel)",
+                label="📥 Download Shortlist",
                 data=excel_data,
                 file_name=f"school_shortlist_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                type="primary"
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
         else:
-            st.caption("No schools added yet. Research schools and add them to your shortlist.")
+            st.markdown("""
+            <div class="shortlist-empty">
+                No schools added yet.<br>
+                Research schools and add them to your shortlist.
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        return selected_la, new_only
+
+
+# =============================================================================
+# LIST VIEW (MAIN PAGE)
+# =============================================================================
+
+def render_list_view(schools: list, search_query: str = ""):
+    """Render the main list view with school table"""
     
-    st.header("Search Schools")
+    # Title
+    st.markdown("""
+    <div class="main-title">Automate your Prospecting and Research so you can Focus on Selling</div>
+    <div class="main-subtitle">London Schools Dataset | Financial, Contact & SEND Intelligence</div>
+    """, unsafe_allow_html=True)
     
-    if selected_la and selected_la != "All Local Authorities":
-        filtered_names = [s.school_name for s in data_loader.get_schools_by_borough(selected_la)]
-        display_names = sorted(filtered_names)
-        st.info(f"Showing {len(display_names)} schools in {selected_la}")
-    else:
-        display_names = school_names
+    # Search section
+    st.markdown('<div class="section-title">Search Schools</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">Select a school</div>', unsafe_allow_html=True)
     
-    default_index = 0
-    if st.session_state.selected_school and st.session_state.selected_school in display_names:
-        default_index = display_names.index(st.session_state.selected_school) + 1
-    
-    selected_school_name = st.selectbox(
-        "Select a school",
-        options=[""] + display_names,
-        index=default_index,
-        placeholder="Choose a school...",
-        help="Select a school to view details and generate conversation starters"
+    search_query = st.text_input(
+        "Search",
+        placeholder="Search by name...",
+        label_visibility="collapsed"
     )
     
-    if selected_school_name:
-        st.session_state.selected_school = selected_school_name
-        school = service.get_school_by_name(selected_school_name)
-        if school:
-            display_school(school, service)
-        else:
-            st.error(f"School not found: {selected_school_name}")
+    # Filter schools by search
+    if search_query:
+        filtered_schools = [s for s in schools if search_query.lower() in s.school_name.lower()]
     else:
-        st.session_state.selected_school = None
-        display_home_view(data_loader)
-
-
-def display_home_view(data_loader):
-    tab1, tab2, tab3 = st.tabs(["Top Staffing Spenders", "Top SEND Opportunities", "Schools with SEN Units"])
+        filtered_schools = schools
     
-    with tab1:
-        st.subheader("Top Staffing Spenders")
-        st.caption("Schools with largest staffing budgets - select from dropdown above to view details")
-        
-        top_spenders = data_loader.get_top_spenders(limit=15, spend_type="total")
-        if top_spenders:
-            table_data = []
-            for school in top_spenders:
-                spend = school.financial.total_teaching_support_costs or 0
-                table_data.append({
-                    "School": school.school_name,
-                    "Staffing Spend": f"£{spend:,.0f}",
-                    "Local Authority": school.la_name or "",
-                    "Priority": school.get_sales_priority()
-                })
-            df = pd.DataFrame(table_data)
-            st.dataframe(df, hide_index=True, use_container_width=True)
+    # Sort by budget (highest first)
+    filtered_schools = sorted(
+        filtered_schools,
+        key=lambda s: s.financial.total_teaching_support_costs if s.financial and s.financial.total_teaching_support_costs else 0,
+        reverse=True
+    )
     
-    with tab2:
-        st.subheader("Top SEND Opportunities")
-        st.caption("Schools with highest SEND demand - select from dropdown above to view details")
-        
-        top_send = data_loader.get_top_send_schools(limit=15)
-        if top_send:
-            table_data = []
-            for school in top_send:
-                ehc = school.send.ehc_plan or 0 if school.send else 0
-                sen = school.send.sen_support or 0 if school.send else 0
-                score = school.send.get_send_priority_score() if school.send else 0
-                flags = []
-                if school.send and school.send.has_sen_unit:
-                    flags.append("SEN Unit")
-                if school.send and school.send.has_resourced_provision:
-                    flags.append("RP")
-                table_data.append({
-                    "School": school.school_name,
-                    "EHC Plans": ehc,
-                    "SEN Support": sen,
-                    "Score": score,
-                    "Flags": " | ".join(flags) if flags else "-"
-                })
-            df = pd.DataFrame(table_data)
-            st.dataframe(df, hide_index=True, use_container_width=True)
+    # Limit display
+    display_schools = filtered_schools[:50]
     
-    with tab3:
-        st.subheader("Schools with SEN Units / Resourced Provisions")
-        st.caption("Hottest leads - select from dropdown above to view details")
-        
-        sen_unit_schools = data_loader.get_schools_with_sen_unit()
-        rp_schools = data_loader.get_schools_with_resourced_provision()
-        all_special = list({s.urn: s for s in (sen_unit_schools + rp_schools)}.values())
-        all_special.sort(key=lambda s: s.send.get_send_priority_score() if s.send else 0, reverse=True)
-        
-        if all_special:
-            table_data = []
-            for school in all_special[:20]:
-                ehc = school.send.ehc_plan or 0 if school.send else 0
-                flags = []
-                if school.send and school.send.has_sen_unit:
-                    flags.append("SEN Unit")
-                if school.send and school.send.has_resourced_provision:
-                    flags.append("Resourced Provision")
-                table_data.append({
-                    "School": school.school_name,
-                    "EHC Plans": ehc,
-                    "Local Authority": school.la_name or "",
-                    "Provision Type": " | ".join(flags)
-                })
-            df = pd.DataFrame(table_data)
-            st.dataframe(df, hide_index=True, use_container_width=True)
-        else:
-            st.info("No schools with SEN Units or Resourced Provisions found in current data")
-
-
-def display_school(school: School, service):
-    st.subheader(school.school_name)
+    # Table header
+    st.markdown("""
+    <div class="table-header">
+        <div class="table-header-cell">School / MAT Name</div>
+        <div class="table-header-cell">Budget</div>
+        <div class="table-header-cell">Local Authority</div>
+        <div class="table-header-cell">Priority</div>
+        <div class="table-header-cell"></div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    col_info, col_shortlist = st.columns([5, 1])
-    with col_shortlist:
-        if is_in_shortlist(school.urn):
-            if st.button("Remove from Shortlist", key="remove_main"):
-                remove_from_shortlist(school.urn)
+    # Table rows
+    for school in display_schools:
+        budget = get_budget_display(school)
+        priority = school.get_combined_priority()
+        priority_badge = get_priority_badge(priority)
+        la = school.la_name or "Unknown"
+        
+        # Create columns for the row
+        col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 0.8, 1])
+        
+        with col1:
+            st.markdown(f"""
+            <div>
+                <span class="school-name">🏫 {school.school_name}</span>
+                <span class="new-badge">NEW</span>
+                <div class="school-urn">URN: {school.urn}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f'<div class="budget-amount">{budget}</div>', unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f'<div class="la-name">{la}</div>', unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown(priority_badge, unsafe_allow_html=True)
+        
+        with col5:
+            if st.button("View Deep Dive →", key=f"view_{school.urn}"):
+                st.session_state.view = "deep_dive"
+                st.session_state.selected_urn = school.urn
                 st.rerun()
-        else:
-            if len(st.session_state.shortlist) >= MAX_SHORTLIST:
-                st.warning(f"Shortlist full ({MAX_SHORTLIST})")
-            else:
-                if st.button("Add to Shortlist", key="add_main", type="primary"):
-                    shortlist_school = service.get_school_by_name(school.school_name)
-                    if shortlist_school:
-                        add_to_shortlist(shortlist_school)
-                        st.success("Added!")
-                        st.rerun()
+        
+        # Add subtle divider
+        st.markdown('<hr style="border: none; border-top: 1px solid #2d3748; margin: 0.5rem 0;">', unsafe_allow_html=True)
     
+    # Show count
+    st.caption(f"Showing {len(display_schools)} of {len(filtered_schools)} schools")
+
+
+# =============================================================================
+# DEEP DIVE VIEW
+# =============================================================================
+
+def render_deep_dive(school: School, service):
+    """Render the deep dive page for a specific school"""
+    
+    # Back button
+    if st.button("← Back to Search"):
+        st.session_state.view = "list"
+        st.session_state.selected_urn = None
+        st.rerun()
+    
+    # School header
+    st.markdown(f'<div class="deep-dive-header">{school.school_name}</div>', unsafe_allow_html=True)
+    
+    # Quick stats row
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         st.metric("URN", school.urn)
     with col2:
         st.metric("Local Authority", school.la_name or "Unknown")
     with col3:
-        st.metric("Type", school.school_type or "Unknown")
+        budget = get_budget_display(school)
+        st.metric("Staffing Budget", budget)
     with col4:
-        st.metric("Pupils", school.pupil_count or "Unknown")
-    with col5:
         priority = school.get_combined_priority()
-        if priority == "HIGH":
-            st.markdown('<span class="priority-high">HIGH PRIORITY</span>', unsafe_allow_html=True)
-        elif priority == "MEDIUM":
-            st.markdown('<span class="priority-medium">MEDIUM</span>', unsafe_allow_html=True)
+        st.markdown(f"**Priority**<br>{get_priority_badge(priority)}", unsafe_allow_html=True)
+    with col5:
+        if is_in_shortlist(school.urn):
+            if st.button("✓ In Shortlist", key="shortlist_toggle"):
+                remove_from_shortlist(school.urn)
+                st.rerun()
         else:
-            st.markdown('<span class="priority-low">LOW</span>', unsafe_allow_html=True)
+            if st.button("+ Add to Shortlist", key="shortlist_toggle"):
+                add_to_shortlist(school)
+                st.rerun()
     
-    if school.financial and school.financial.total_teaching_support_costs:
-        spend = school.financial.total_teaching_support_costs
-        st.markdown(f"""
-        <div class="staffing-spend-high">
-            <h3>Total Staffing Budget: £{spend:,.0f}</h3>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("---")
     
-    if school.send and school.send.has_send_data():
-        total_send = school.send.get_total_send()
-        ehc = school.send.ehc_plan or 0
-        badges = ""
-        if school.send.has_sen_unit:
-            badges += '<span class="sen-unit-badge">SEN Unit</span>'
-        if school.send.has_resourced_provision:
-            badges += '<span class="sen-unit-badge">Resourced Provision</span>'
-        
-        st.markdown(f"""
-        <div class="send-highlight">
-            <h3>SEND Profile: {total_send} pupils ({ehc} EHC Plans) {badges}</h3>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.divider()
-    
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Conversation Starters",
-        "Contact Details",
-        "Financial Data",
-        "SEND Opportunities",
-        "Full Details"
+    # Main content in tabs
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📞 Contact & Details",
+        "💰 Financial Data",
+        "🎯 SEND Opportunities",
+        "💬 Conversation Starters"
     ])
     
     with tab1:
-        display_conversation_starters(school, service)
+        render_contact_details(school)
+    
     with tab2:
-        display_contact_info(school)
+        render_financial_details(school)
+    
     with tab3:
-        display_financial_data(school)
+        render_send_details(school)
+    
     with tab4:
-        display_send_data(school)
-    with tab5:
-        display_full_details(school)
+        render_conversation_starters(school, service)
 
 
-def display_conversation_starters(school: School, service):
-    st.subheader("Conversation Starters")
+def render_contact_details(school: School):
+    """Render contact and basic details"""
     
-    financial_starters = [s for s in school.conversation_starters if not (s.source and s.source.startswith("http"))]
-    ofsted_starters = [s for s in school.conversation_starters if s.source and s.source.startswith("http")]
+    col1, col2 = st.columns(2)
     
-    st.markdown('<div class="section-header section-header-financial"><strong>FINANCIAL CONVERSATION STARTERS</strong></div>', unsafe_allow_html=True)
-    
-    if financial_starters:
-        for i, starter in enumerate(financial_starters, 1):
-            with st.expander(f"**{i}. {starter.topic}**", expanded=(i == 1)):
-                st.markdown(f"""
-                <div class="starter-card">
-                    <div class="starter-detail">{starter.detail}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                if starter.source:
-                    st.caption(f"Source: {starter.source}")
-                st.code(starter.detail, language=None)
-    
-    col1, col2 = st.columns([1, 3])
     with col1:
-        num_starters = st.number_input("How many?", min_value=1, max_value=10, value=5, key="fin_starters")
-    with col2:
-        if st.button("Generate Financial Conversation Starters", type="primary"):
-            with st.spinner("Generating insights from financial data..."):
-                school_with_starters = service.get_school_intelligence(
-                    school.school_name, force_refresh=True, num_starters=num_starters
-                )
-            if school_with_starters and school_with_starters.conversation_starters:
-                if is_in_shortlist(school.urn):
-                    st.session_state.shortlist[school.urn]["school"] = school_with_starters
-                st.success(f"Generated {len(school_with_starters.conversation_starters)} starters!")
-                st.rerun()
-            else:
-                st.error("Failed to generate starters. Check your API key.")
-    
-    st.divider()
-    
-    st.markdown('<div class="section-header section-header-ofsted"><strong>OFSTED CONVERSATION STARTERS</strong></div>', unsafe_allow_html=True)
-    
-    if ofsted_starters:
-        for i, starter in enumerate(ofsted_starters, 1):
-            with st.expander(f"**{i}. {starter.topic}**", expanded=(i == 1)):
-                st.markdown(f"""
-                <div class="starter-card-ofsted">
-                    <div class="starter-detail">{starter.detail}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                if starter.source:
-                    st.markdown(f"**Source:** [View Ofsted Report]({starter.source})")
-                st.code(starter.detail, language=None)
-    
-    if school.ofsted and school.ofsted.rating:
-        st.info(f"**Current Ofsted Rating:** {school.ofsted.rating} | **Inspected:** {school.ofsted.inspection_date or 'Unknown'}")
-        if school.ofsted.report_url:
-            st.markdown(f"[View Full Ofsted Report]({school.ofsted.report_url})")
-    
-    st.markdown("""
-    <div style="background-color: #1a3a5c; padding: 0.75rem 1rem; border-radius: 6px; border-left: 4px solid #3182ce; margin: 0.5rem 0;">
-        <strong>Note:</strong> Fetching Ofsted report takes up to 60 seconds as we download and analyze the PDF.
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("")
-    
-    col_ofsted1, col_ofsted2 = st.columns([1, 3])
-    with col_ofsted2:
-        if st.button("Fetch Ofsted Report & Generate Starters", type="primary", key="ofsted_btn"):
-            with st.spinner("Downloading Ofsted PDF and analyzing... This takes up to 60 seconds..."):
-                school_with_ofsted = service.get_school_intelligence_with_ofsted(
-                    school.school_name, force_refresh=True, num_starters=3, include_ofsted=True
-                )
-            if school_with_ofsted:
-                if is_in_shortlist(school.urn):
-                    st.session_state.shortlist[school.urn]["school"] = school_with_ofsted
-                new_ofsted_starters = [s for s in school_with_ofsted.conversation_starters if s.source and s.source.startswith("http")]
-                if new_ofsted_starters:
-                    st.success(f"Generated {len(new_ofsted_starters)} Ofsted-based starters!")
-                    st.rerun()
-                elif school_with_ofsted.ofsted:
-                    st.info("Ofsted data fetched but no specific improvement areas found for conversation starters.")
-                    st.rerun()
-                else:
-                    st.warning("Could not fetch Ofsted report for this school.")
-            else:
-                st.error("Failed to analyze Ofsted report.")
-    
-    st.divider()
-    st.caption("For SEND-focused conversation starters, see the SEND Opportunities tab.")
-
-
-def display_contact_info(school: School):
-    st.subheader("Key Contacts")
-    
-    if school.headteacher:
-        head = school.headteacher
-        st.markdown(f"""
-        <div class="contact-card">
-            <h4>{head.full_name}</h4>
-            <p><strong>Role:</strong> Headteacher</p>
-        </div>
+        st.markdown("""
+        <div class="info-card">
+            <div class="info-card-title">📋 School Information</div>
         """, unsafe_allow_html=True)
         
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write("**Phone:**")
-            st.write(school.phone or "Not available")
-        with col2:
-            st.write("**Website:**")
+        details = [
+            ("School Type", school.school_type or "N/A"),
+            ("Phase", school.phase or "N/A"),
+            ("Pupils", str(school.pupil_count) if school.pupil_count else "N/A"),
+            ("Trust", school.trust_name or "N/A"),
+        ]
+        
+        for label, value in details:
+            st.markdown(f"""
+            <div class="info-row">
+                <span class="info-label">{label}</span>
+                <span class="info-value">{value}</span>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="info-card">
+            <div class="info-card-title">👤 Key Contact</div>
+        """, unsafe_allow_html=True)
+        
+        if school.headteacher:
+            head = school.headteacher
+            contact_details = [
+                ("Name", head.full_name),
+                ("Role", "Headteacher"),
+                ("Phone", school.phone or "N/A"),
+            ]
+            
+            for label, value in contact_details:
+                st.markdown(f"""
+                <div class="info-row">
+                    <span class="info-label">{label}</span>
+                    <span class="info-value">{value}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
             if school.website:
                 website = school.website if school.website.startswith('http') else f"http://{school.website}"
-                st.markdown(f"[{school.website}]({website})")
-            else:
-                st.write("Not available")
-    else:
-        st.info("No headteacher information available")
+                st.markdown(f"""
+                <div class="info-row">
+                    <span class="info-label">Website</span>
+                    <span class="info-value"><a href="{website}" target="_blank" style="color: #60a5fa;">{school.website}</a></span>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.markdown('<span class="info-label">No contact information available</span>', unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     
-    st.divider()
-    st.write("**Address:**")
-    st.write(school.get_full_address() or "Address not available")
+    # Address
+    st.markdown("""
+    <div class="info-card">
+        <div class="info-card-title">📍 Address</div>
+    """, unsafe_allow_html=True)
     
-    if school.trust_name:
-        st.divider()
-        st.write("**Trust:**")
-        st.write(school.trust_name)
+    address = school.get_full_address() or "Address not available"
+    st.markdown(f'<span class="info-value">{address}</span>', unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # External links
+    st.markdown(f"""
+    <div style="margin-top: 1rem;">
+        <a href="{get_fbit_url(school.urn)}" target="_blank" class="deep-dive-link">
+            View on Gov.uk Financial Benchmarking Tool →
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
 
 
-def display_financial_data(school: School):
-    st.subheader("Financial Data")
-    st.caption("Data from Government Financial Benchmarking Tool")
-    
-    fbit_url = get_fbit_url(school.urn)
-    st.markdown(f"[View on Gov.uk Financial Benchmarking Tool]({fbit_url})")
+def render_financial_details(school: School):
+    """Render financial data"""
     
     if school.financial and school.financial.has_financial_data():
         fin = school.financial
         
+        # Key metrics
         col1, col2, col3 = st.columns(3)
+        
         with col1:
             if fin.total_teaching_support_costs:
                 st.metric("Total Staffing Costs", f"£{fin.total_teaching_support_costs:,.0f}")
-            else:
-                st.metric("Total Staffing Costs", "No data")
         with col2:
             if fin.total_expenditure:
                 st.metric("Total Expenditure", f"£{fin.total_expenditure:,.0f}")
         with col3:
-            if fin.agency_supply_costs and fin.agency_supply_costs > 0:
+            if fin.agency_supply_costs:
                 st.metric("Agency Supply", f"£{fin.agency_supply_costs:,.0f}")
-            else:
-                st.metric("Agency Supply", "£0")
         
-        st.divider()
-        st.write("**Cost Breakdown:**")
+        st.markdown("---")
+        
+        # Cost breakdown
+        st.markdown("""
+        <div class="info-card">
+            <div class="info-card-title">💷 Cost Breakdown</div>
+        """, unsafe_allow_html=True)
         
         costs = [
-            ("Total Staffing Costs", fin.total_teaching_support_costs, True),
-            ("Teaching Staff (E01)", fin.teaching_staff_costs, False),
-            ("Supply Teaching (E02)", fin.supply_teaching_costs, False),
-            ("Educational Support (E03)", fin.educational_support_costs, False),
-            ("Agency Supply (E26)", fin.agency_supply_costs, False),
-            ("Consultancy (E27)", fin.educational_consultancy_costs, False),
+            ("Total Staffing Costs", fin.total_teaching_support_costs),
+            ("Teaching Staff (E01)", fin.teaching_staff_costs),
+            ("Supply Teaching (E02)", fin.supply_teaching_costs),
+            ("Educational Support (E03)", fin.educational_support_costs),
+            ("Agency Supply (E26)", fin.agency_supply_costs),
+            ("Consultancy (E27)", fin.educational_consultancy_costs),
         ]
         
-        for label, value, highlight in costs:
+        for label, value in costs:
             if value and value > 0:
+                per_pupil = ""
                 if fin.total_pupils and fin.total_pupils > 0:
-                    per_pupil = value / fin.total_pupils
-                    if highlight:
-                        st.write(f"- **{label}:** £{value:,.0f} (£{per_pupil:,.0f} per pupil)")
-                    else:
-                        st.write(f"- {label}: £{value:,.0f} (£{per_pupil:,.0f} per pupil)")
-                else:
-                    st.write(f"- {label}: £{value:,.0f}")
+                    per_pupil = f" (£{value/fin.total_pupils:,.0f}/pupil)"
+                st.markdown(f"""
+                <div class="info-row">
+                    <span class="info-label">{label}</span>
+                    <span class="info-value">£{value:,.0f}{per_pupil}</span>
+                </div>
+                """, unsafe_allow_html=True)
         
-        st.divider()
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Priority insight
         if fin.total_teaching_support_costs and fin.total_teaching_support_costs >= 500000:
-            st.markdown(f'<span class="priority-high">HIGH PRIORITY</span> This school invests **£{fin.total_teaching_support_costs:,.0f}** in staffing annually!', unsafe_allow_html=True)
+            st.success(f"🎯 **HIGH PRIORITY** - This school invests £{fin.total_teaching_support_costs:,.0f} in staffing annually!")
         elif fin.total_teaching_support_costs and fin.total_teaching_support_costs >= 200000:
-            st.info(f"**Sales Insight:** This school invests **£{fin.total_teaching_support_costs:,.0f}** in staffing annually.")
+            st.info(f"📊 **MEDIUM PRIORITY** - This school invests £{fin.total_teaching_support_costs:,.0f} in staffing annually.")
     else:
         st.info("No financial data available for this school")
-        st.markdown(f"You can check manually: [Gov.uk Financial Benchmarking Tool]({fbit_url})")
 
 
-def display_send_data(school: School):
-    st.subheader("SEND Opportunities")
-    st.caption("Data from DfE Special Educational Needs in England")
+def render_send_details(school: School):
+    """Render SEND data and opportunities"""
     
     if school.send and school.send.has_send_data():
         send = school.send
         
+        # Key metrics
         col1, col2, col3, col4 = st.columns(4)
+        
         with col1:
-            total = send.get_total_send()
-            st.metric("Total SEND", total)
+            st.metric("Total SEND", send.get_total_send())
         with col2:
             st.metric("EHC Plans", send.ehc_plan or 0)
         with col3:
@@ -746,18 +984,24 @@ def display_send_data(school: School):
             pct = send.get_send_percentage()
             st.metric("SEND %", f"{pct:.1f}%" if pct else "N/A")
         
+        # Special provision badges
         if send.has_sen_unit or send.has_resourced_provision:
-            st.divider()
-            badges = []
+            st.markdown("---")
+            badges_html = ""
             if send.has_sen_unit:
-                badges.append("**SEN Unit** - Dedicated SEND infrastructure (HOT LEAD)")
+                badges_html += '<span class="sen-badge">🏫 SEN Unit</span>'
             if send.has_resourced_provision:
-                badges.append("**Resourced Provision** - Specialist provision (HOT LEAD)")
-            for b in badges:
-                st.markdown(b)
+                badges_html += '<span class="sen-badge">📚 Resourced Provision</span>'
+            st.markdown(f'<div style="margin: 1rem 0;">{badges_html}</div>', unsafe_allow_html=True)
+            st.warning("⭐ **HOT LEAD** - Dedicated SEND infrastructure means ongoing staffing demand!")
         
-        st.divider()
-        st.write("**EHC Plan Breakdown by Need:**")
+        st.markdown("---")
+        
+        # EHC breakdown
+        st.markdown("""
+        <div class="info-card">
+            <div class="info-card-title">📊 EHC Plan Breakdown by Need</div>
+        """, unsafe_allow_html=True)
         
         needs = [
             ("Autism (ASD)", send.ehc_asd),
@@ -768,119 +1012,199 @@ def display_send_data(school: School):
             ("Physical Disability", send.ehc_pd),
             ("Hearing Impairment", send.ehc_hi),
             ("Visual Impairment", send.ehc_vi),
-            ("Profound & Multiple LD", send.ehc_pmld),
-            ("Specific Learning Difficulty", send.ehc_spld),
         ]
         
         sorted_needs = sorted(needs, key=lambda x: x[1] or 0, reverse=True)
+        
         for need, count in sorted_needs:
             if count and count > 0:
-                st.write(f"- {need}: **{count}** pupils")
+                st.markdown(f"""
+                <div class="info-row">
+                    <span class="info-label">{need}</span>
+                    <span class="info-value">{count} pupils</span>
+                </div>
+                """, unsafe_allow_html=True)
         
-        st.divider()
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # SEND priority
         priority = send.get_send_priority_level()
         score = send.get_send_priority_score()
+        st.markdown(f"**SEND Priority Score:** {score} ({priority})")
         
-        if priority == "HIGH":
-            st.markdown(f'<span class="priority-high">HIGH PRIORITY</span> SEND Priority Score: {score}', unsafe_allow_html=True)
-        elif priority == "MEDIUM":
-            st.markdown(f'<span class="priority-medium">MEDIUM</span> SEND Priority Score: {score}', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<span class="priority-low">LOW</span> SEND Priority Score: {score}', unsafe_allow_html=True)
+    else:
+        st.info("No SEND data available for this school")
+
+
+def render_conversation_starters(school: School, service):
+    """Render conversation starters with generation buttons"""
+    
+    # Financial starters section
+    st.markdown("### 💰 Financial Conversation Starters")
+    st.caption("Based on staffing budget and expenditure data")
+    
+    financial_starters = [s for s in school.conversation_starters if not (s.source and s.source.startswith("http"))]
+    
+    if financial_starters:
+        for starter in financial_starters:
+            st.markdown(f"""
+            <div class="starter-card">
+                <div class="starter-topic">{starter.topic}</div>
+                <div class="starter-detail">{starter.detail}</div>
+                <div class="starter-source">Source: {starter.source or 'Financial Data'}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Copy button
+            st.code(starter.detail, language=None)
+    
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        num_fin = st.number_input("Count", min_value=1, max_value=5, value=3, key="num_fin")
+    with col2:
+        if st.button("🔄 Generate Financial Starters", type="primary"):
+            with st.spinner("Generating from financial data..."):
+                updated_school = service.get_school_intelligence(
+                    school.school_name, force_refresh=True, num_starters=num_fin
+                )
+            if updated_school:
+                if is_in_shortlist(school.urn):
+                    st.session_state.shortlist[school.urn]["school"] = updated_school
+                st.success("Generated!")
+                st.rerun()
+    
+    st.markdown("---")
+    
+    # Ofsted starters section
+    st.markdown("### 📋 Ofsted Conversation Starters")
+    st.caption("Based on latest Ofsted inspection report")
+    
+    ofsted_starters = [s for s in school.conversation_starters if s.source and s.source.startswith("http")]
+    
+    if ofsted_starters:
+        for starter in ofsted_starters:
+            st.markdown(f"""
+            <div class="starter-card-ofsted">
+                <div class="starter-topic">{starter.topic}</div>
+                <div class="starter-detail">{starter.detail}</div>
+                <div class="starter-source">Source: <a href="{starter.source}" target="_blank" style="color: #60a5fa;">View Ofsted Report</a></div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.code(starter.detail, language=None)
+    
+    if school.ofsted and school.ofsted.rating:
+        st.info(f"**Current Rating:** {school.ofsted.rating} | **Inspected:** {school.ofsted.inspection_date or 'Unknown'}")
+    
+    st.warning("⏱️ Note: Fetching Ofsted report takes up to 60 seconds (PDF download & analysis)")
+    
+    if st.button("🔄 Fetch Ofsted & Generate Starters", type="secondary"):
+        with st.spinner("Downloading and analyzing Ofsted PDF..."):
+            updated_school = service.get_school_intelligence_with_ofsted(
+                school.school_name, force_refresh=True, num_starters=3, include_ofsted=True
+            )
+        if updated_school:
+            if is_in_shortlist(school.urn):
+                st.session_state.shortlist[school.urn]["school"] = updated_school
+            st.success("Generated from Ofsted report!")
+            st.rerun()
+    
+    st.markdown("---")
+    
+    # SEND starters section
+    st.markdown("### 🎯 SEND Conversation Starters")
+    st.caption("Based on SEND data (auto-generated from data)")
+    
+    if school.send and school.send.has_send_data():
+        send = school.send
         
-        st.divider()
-        st.markdown('<div class="section-header section-header-send"><strong>SEND CONVERSATION STARTERS</strong></div>', unsafe_allow_html=True)
-        
-        ehc = send.ehc_plan or 0
-        
+        # Auto-generate SEND starters based on data
         if send.has_sen_unit or send.has_resourced_provision:
             unit_type = "SEN unit" if send.has_sen_unit else "resourced provision"
             st.markdown(f"""
             <div class="starter-card-send">
+                <div class="starter-topic">Dedicated SEND Provision</div>
                 <div class="starter-detail">"I noticed you have a dedicated {unit_type} - how are you currently staffing it? We work with schools to provide trained SEND specialists for both permanent and cover positions."</div>
+                <div class="starter-source">Source: SEND Data</div>
             </div>
             """, unsafe_allow_html=True)
-            st.code(f"I noticed you have a dedicated {unit_type} - how are you currently staffing it? We work with schools to provide trained SEND specialists for both permanent and cover positions.", language=None)
         
+        ehc = send.ehc_plan or 0
         if ehc >= 10:
             st.markdown(f"""
             <div class="starter-card-send">
+                <div class="starter-topic">EHC Plan Support</div>
                 <div class="starter-detail">"You have {ehc} pupils with EHC plans - that's a significant support requirement. How are you managing their 1:1 support? We have ASD-trained and SEMH-specialist TAs available."</div>
+                <div class="starter-source">Source: SEND Data</div>
             </div>
             """, unsafe_allow_html=True)
-            st.code(f"You have {ehc} pupils with EHC plans - that's a significant support requirement. How are you managing their 1:1 support? We have ASD-trained and SEMH-specialist TAs available.", language=None)
         
         if send.ehc_asd and send.ehc_asd >= 3:
             st.markdown(f"""
             <div class="starter-card-send">
+                <div class="starter-topic">Autism Specialists</div>
                 <div class="starter-detail">"With {send.ehc_asd} pupils with autism, having the right trained support staff is crucial. Are you finding it difficult to recruit autism-trained TAs? We specialise in placing SEND specialists."</div>
+                <div class="starter-source">Source: SEND Data</div>
             </div>
             """, unsafe_allow_html=True)
-            st.code(f"With {send.ehc_asd} pupils with autism, having the right trained support staff is crucial. Are you finding it difficult to recruit autism-trained TAs? We specialise in placing SEND specialists.", language=None)
         
         if send.ehc_semh and send.ehc_semh >= 3:
             st.markdown(f"""
             <div class="starter-card-send">
+                <div class="starter-topic">SEMH Specialists</div>
                 <div class="starter-detail">"I see you have {send.ehc_semh} pupils with SEMH needs - this is one of the hardest areas to recruit for. We have experienced SEMH specialists who understand de-escalation and behaviour management."</div>
+                <div class="starter-source">Source: SEND Data</div>
             </div>
             """, unsafe_allow_html=True)
-            st.code(f"I see you have {send.ehc_semh} pupils with SEMH needs - this is one of the hardest areas to recruit for. We have experienced SEMH specialists who understand de-escalation and behaviour management.", language=None)
-        
-        total = send.get_total_send()
-        if total >= 15:
-            st.markdown(f"""
-            <div class="starter-card-send">
-                <div class="starter-detail">"With {total} SEND pupils, what happens when your SENCO or specialist TAs are absent? We can provide trained cover at short notice to maintain continuity for your vulnerable learners."</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.code(f"With {total} SEND pupils, what happens when your SENCO or specialist TAs are absent? We can provide trained cover at short notice to maintain continuity for your vulnerable learners.", language=None)
-        
-        if not (send.has_sen_unit or send.has_resourced_provision or ehc >= 10 or (send.ehc_asd and send.ehc_asd >= 3) or (send.ehc_semh and send.ehc_semh >= 3) or total >= 15):
-            st.caption("This school has lower SEND numbers - focus on general supply and cover needs.")
-    
     else:
         st.info("No SEND data available for this school")
-        st.caption("This may be because the school is not in the DfE SEND dataset (e.g., independent schools)")
 
 
-def display_full_details(school: School):
-    st.subheader("Full School Details")
+# =============================================================================
+# MAIN APP
+# =============================================================================
+
+def main():
+    init_session_state()
     
-    details = {
-        "URN": school.urn,
-        "School Name": school.school_name,
-        "Local Authority": school.la_name,
-        "School Type": school.school_type,
-        "Phase": school.phase,
-        "Number of Pupils": school.pupil_count,
-        "Headteacher": school.headteacher.full_name if school.headteacher else "N/A",
-        "Phone": school.phone,
-        "Website": school.website,
-        "Address": school.get_full_address(),
-        "Trust Name": school.trust_name or "N/A",
-        "Financial Priority": school.get_sales_priority(),
-        "SEND Priority": school.get_send_priority(),
-        "Combined Priority": school.get_combined_priority(),
-    }
+    # Check URL params for deep linking
+    params = st.query_params
+    if "urn" in params:
+        st.session_state.view = "deep_dive"
+        st.session_state.selected_urn = params["urn"]
     
-    if school.financial:
-        details["Total Staffing Spend"] = school.financial.get_total_staffing_formatted()
-        if school.financial.agency_supply_costs:
-            details["Agency Spend"] = school.financial.get_agency_spend_formatted()
+    # Initialize services
+    service = get_intelligence_service()
+    data_loader = get_data_loader()
     
-    if school.send:
-        details["Total SEND Pupils"] = school.send.get_total_send()
-        details["EHC Plans"] = school.send.ehc_plan or 0
-        details["SEN Support"] = school.send.sen_support or 0
-        details["Has SEN Unit"] = "Yes" if school.send.has_sen_unit else "No"
-        details["Has Resourced Provision"] = "Yes" if school.send.has_resourced_provision else "No"
+    # Load data
+    with st.spinner("Loading schools..."):
+        all_schools = service.get_all_schools()
+        stats = service.get_statistics()
     
-    df = pd.DataFrame([{"Field": k, "Value": str(v) if v else "N/A"} for k, v in details.items()])
-    st.dataframe(df, hide_index=True, use_container_width=True)
+    # Render sidebar
+    selected_la, new_only = render_sidebar(stats, data_loader)
     
-    st.divider()
-    st.markdown(f"[View Financial Data on Gov.uk]({get_fbit_url(school.urn)})")
-    st.caption(f"Data source: {school.data_source}")
+    # Filter schools
+    if selected_la and selected_la != "All Local Authorities":
+        schools = data_loader.get_schools_by_borough(selected_la)
+    else:
+        schools = all_schools
+    
+    # Render main content based on view
+    if st.session_state.view == "deep_dive" and st.session_state.selected_urn:
+        school = data_loader.get_school_by_urn(st.session_state.selected_urn)
+        if school:
+            # Update URL
+            st.query_params["urn"] = school.urn
+            render_deep_dive(school, service)
+        else:
+            st.error("School not found")
+            st.session_state.view = "list"
+    else:
+        # Clear URL params
+        st.query_params.clear()
+        render_list_view(schools)
 
 
 if __name__ == "__main__":
