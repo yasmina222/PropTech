@@ -278,6 +278,7 @@ def get_fbit_url(urn: str) -> str:
 
 
 def main():
+    init_session_state()
     service = get_intelligence_service()
     data_loader = get_data_loader()
     
