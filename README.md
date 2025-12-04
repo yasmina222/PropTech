@@ -75,7 +75,8 @@ System Overview
 <img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/b3831b6b-fb78-4a64-aea6-b39320781dcd" />
 
 
-**Architecture & Design Decisions**
+
+### Architecture & Design Decisions
 
 Production AI systems require deliberate architectural choices that balance user experience, cost efficiency, and maintainability. This section outlines the key design decisions and their rationale.
 
