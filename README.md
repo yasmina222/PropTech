@@ -110,7 +110,7 @@ Graceful Degradation: If cache fails, the system falls back to live API calls ra
 
 ##  Technology Stack
 
-###  Application Layer
+##  Application Layer
 | Technology | Purpose |
 | :--- | :--- |
 | **Streamlit** | Interactive web UI with dark theme |
@@ -120,7 +120,7 @@ Graceful Degradation: If cache fails, the system falls back to live API calls ra
 
 <br>
 
-###  AI & Orchestration
+##  AI & Orchestration
 | Technology | Purpose |
 | :--- | :--- |
 | **LangChain** | Chain composition and prompt management |
@@ -130,7 +130,7 @@ Graceful Degradation: If cache fails, the system falls back to live API calls ra
 
 <br>
 
-###  Infrastructure
+##  Infrastructure
 | Technology | Purpose |
 | :--- | :--- |
 | **Databricks** | Hosting, authentication, deployment |
@@ -139,7 +139,7 @@ Graceful Degradation: If cache fails, the system falls back to live API calls ra
 
 <br>
 
-###  Data Sources
+##  Data Sources
 | Source | Format | Update Frequency |
 | :--- | :--- | :--- |
 | **GIAS** | CSV | Monthly |
