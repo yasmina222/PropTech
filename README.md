@@ -1,22 +1,26 @@
-School Research Assistant
+School Research and Prospecting Assistant 
+
 AI-Powered Sales Intelligence Platform for Education Recruitment
+
+<img width="1266" height="611" alt="image" src="https://github.com/user-attachments/assets/aaa44b86-f683-4df2-b402-9341ddf2086f" />
+
+
 Enterprise-grade competitive intelligence system that transforms how recruitment consultants prepare for school engagement, reducing research time from 30 minutes to under 60 seconds.
 Python Streamlit LangChain Claude Sonnet 4 Databricks
 
 Table of Contents
 
-Business Context
-Solution Overview
-Architecture
-Architecture & Design Decisions
-Technology Stack
-Data Pipeline
-Project Journey
-Results & Impact
-Future Roadmap
-Contact
+- Business Context
+- Solution Overview
+- Architecture
+- Architecture & Design Decisions
+- Technology Stack
+- Data Pipeline
+- Project Journey
+- Results & Impact
+- Future Roadmap
+- Contact
 
-<img width="1266" height="611" alt="image" src="https://github.com/user-attachments/assets/aaa44b86-f683-4df2-b402-9341ddf2086f" />
 
 Business Context
 The Problem
@@ -39,141 +43,48 @@ Solution Overview
 The School Research Assistant is a production-grade AI application that consolidates fragmented school data into actionable sales intelligence, generating contextualised conversation starters powered by Claude Sonnet 4.
 What Makes This Production-Grade?
 ✅ Intelligent Data Fusion: Merges financial, operational, and SEND data across 3,000+ schools using URN-based entity resolution
+
 ✅ AI-Powered Insights: LangChain orchestration with Claude Sonnet 4 generates contextually relevant conversation starters based on each school's unique profile
+
 ✅ Enterprise Deployment: Hosted on Databricks with integrated authentication and role-based access
+
 ✅ Cost-Optimised Architecture: Aggressive caching strategy achieves 85%+ cache hit rates, reducing API costs by £400+/month
+
 ✅ Sub-Minute Intelligence: Complete school profile with AI-generated insights delivered in 40-60 seconds
+
 ✅ Scalable Design: Handles 450 concurrent users with horizontal scaling capability
 
 Architecture
 System Overview
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           PRESENTATION LAYER                                 │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                    Streamlit Application                              │   │
-│  │  • Password Authentication (SEG2025AI!)                              │   │
-│  │  • Dark Theme UI with Table-Based School Browser                     │   │
-│  │  • Deep Dive Pages with Tabbed Navigation                            │   │
-│  │  • Excel Export (OpenPyXL)                                           │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          ORCHESTRATION LAYER                                 │
-│  ┌───────────────────┐  ┌───────────────────┐  ┌───────────────────────┐   │
-│  │ Intelligence      │  │ Cache Layer       │  │ Data Loader           │   │
-│  │ Service           │  │ (24hr TTL)        │  │                       │   │
-│  │                   │  │                   │  │ • GIAS CSV Parser     │   │
-│  │ • Profile Builder │  │ • 85%+ Hit Rate   │  │ • Financial Merger    │   │
-│  │ • Chain Router    │  │ • URN-Keyed       │  │ • SEND Aggregator     │   │
-│  └───────────────────┘  └───────────────────┘  └───────────────────────┘   │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                      Pydantic Models (models_v2.py)                   │   │
-│  │  • SchoolProfile  • FinancialData  • SENDProfile  • ConversationStarter│
-│  └─────────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              AI LAYER                                        │
-│  ┌───────────────────────────────────┐  ┌─────────────────────────────┐    │
-│  │ Conversation Chain                 │  │ Ofsted Chain                │    │
-│  │ (conversation_chain.py)            │  │ (ofsted_chain.py)           │    │
-│  │                                    │  │                             │    │
-│  │ • Financial Analysis Prompts       │  │ • PDF Search (Serper API)   │    │
-│  │ • SEND Opportunity Detection       │  │ • Report Extraction         │    │
-│  │ • Contextual Starter Generation    │  │ • Insight Synthesis         │    │
-│  │                                    │  │                             │    │
-│  │ Cost: ~£0.02/call                  │  │ Cost: ~£0.03/call           │    │
-│  └───────────────────────────────────┘  └─────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                    LangChain Framework                                │   │
-│  │  • Prompt Templates  • Chain Composition  • Error Handling           │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          EXTERNAL SERVICES                                   │
-│  ┌───────────────────┐  ┌───────────────────┐  ┌───────────────────────┐   │
-│  │ Claude Sonnet 4   │  │ Serper API        │  │ PyPDF2                │   │
-│  │ (Anthropic)       │  │                   │  │                       │   │
-│  │                   │  │ • Ofsted PDF      │  │ • Report Text         │   │
-│  │ • Conversation    │  │   Discovery       │  │   Extraction          │   │
-│  │   Generation      │  │ • £40/month       │  │ • FREE                │   │
-│  │ • Pay-per-token   │  │                   │  │                       │   │
-│  └───────────────────┘  └───────────────────┘  └───────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            DATA SOURCES                                      │
-│  ┌───────────────────┐  ┌───────────────────┐  ┌───────────────────────┐   │
-│  │ GIAS CSV          │  │ Financial CSV     │  │ SEND CSV              │   │
-│  │ 3,187 schools     │  │ 2,570 schools     │  │ 24,481 records        │   │
-│  │                   │  │                   │  │                       │   │
-│  │ • School details  │  │ • Expenditure     │  │ • SEN Support levels  │   │
-│  │ • Headteacher     │  │ • Staffing costs  │  │ • EHC Plans           │   │
-│  │ • Contact info    │  │ • Benchmarking    │  │ • Primary needs       │   │
-│  └───────────────────┘  └───────────────────┘  └───────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
-User Journey
-Consultant selects school
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Check Cache    │────▶│  Cache Hit?     │────▶│  Return Cached  │
-│  (URN lookup)   │     │                 │ YES │  Results        │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                               │ NO
-                               ▼
-                  ┌─────────────────────────┐
-                  │  Load from CSV Sources  │  FREE
-                  │  (GIAS + Financial +    │
-                  │   SEND merge)           │
-                  └─────────────────────────┘
-                               │
-                               ▼
-                  ┌─────────────────────────┐
-                  │  Generate Conversation  │  ~£0.02
-                  │  Starters via Claude    │
-                  └─────────────────────────┘
-                               │
-                               ▼
-                  ┌─────────────────────────┐
-                  │  Cache Results          │
-                  │  (24hr TTL)             │
-                  └─────────────────────────┘
-                               │
-                               ▼
-                  ┌─────────────────────────┐
-                  │  Display Deep Dive      │
-                  │  with Tabbed Interface  │
-                  └─────────────────────────┘
+
+<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/b3831b6b-fb78-4a64-aea6-b39320781dcd" />
+
 
 Architecture & Design Decisions
+
 Production AI systems require deliberate architectural choices that balance user experience, cost efficiency, and maintainability. This section outlines the key design decisions and their rationale.
+
 Why Streamlit? Rapid Deployment with Enterprise Capability
 The choice of Streamlit over alternatives like Flask, FastAPI, or React was driven by three strategic considerations:
 Speed to Value: Streamlit's declarative approach allowed the complete UI to be built in days rather than weeks. For an internal tool where time-to-deployment directly impacts business value, this acceleration was critical.
 Databricks Native Integration: Streamlit apps deploy directly within the Databricks workspace, inheriting existing authentication, networking, and security configurations. This eliminated the need for separate infrastructure provisioning and reduced the attack surface.
 Consultant-Friendly Interface: The target users are recruitment consultants, not technical staff. Streamlit's clean, interactive widgets (dropdowns, search bars, data tables) provide an intuitive experience without requiring frontend development expertise.
 Trade-off Acknowledged: Streamlit's single-threaded model limits concurrent request handling. For 450 users, this is mitigated through aggressive caching and the bursty nature of consultant workflows (research happens in concentrated periods, not continuously).
+
 Why LangChain? Orchestration Without Lock-In
 LangChain serves as the orchestration layer between the application and Claude, chosen for specific architectural benefits:
 Chain Composition: The platform requires multiple AI operations (financial analysis, SEND opportunity detection, Ofsted synthesis) that can be composed, cached, and error-handled independently. LangChain's chain abstraction maps directly to this requirement.
 Prompt Templating: Conversation starters require dynamic injection of school-specific data into carefully crafted prompts. LangChain's PromptTemplate system separates prompt engineering from application logic, enabling iteration without code changes.
 Provider Flexibility: While currently using Claude, LangChain's abstraction layer means switching to Azure OpenAI or other providers requires only configuration changes—not application rewrites. This protects against vendor lock-in and enables A/B testing of models.
 MIT Licensed: LangChain is fully open source under MIT license, with no commercial restrictions. Major enterprises (Microsoft, Google, Amazon) use it in production, validating its enterprise readiness.
+
 Why Claude Sonnet 4? Precision Over Power
 The model selection was driven by the specific nature of the task:
 Instruction Following: Conversation starters require strict adherence to output formats (structured JSON with specific fields). Claude Sonnet 4 demonstrates superior instruction-following compared to alternatives tested, reducing post-processing overhead.
 Cost-Performance Balance: At $3/1M input tokens and $15/1M output tokens, Sonnet 4 offers the optimal trade-off for this use case. The tasks don't require Opus-level reasoning, and Haiku's occasional format inconsistencies increase error handling complexity.
 Consistent Tone: Recruitment conversations require professional but approachable language. Claude's training produces more naturally conversational outputs than GPT-4 alternatives in internal testing.
 UK Context Awareness: Claude demonstrates strong understanding of UK education terminology (Ofsted, EHC Plans, Local Authorities, Academy Trusts) without requiring extensive prompt engineering to establish context.
+
 Why This Caching Strategy? Economics at Scale
 The caching architecture is the most critical cost control mechanism:
 24-Hour TTL: School data changes infrequently (financial data is annual, SEND data is termly). A 24-hour cache provides fresh-enough data while maximising hit rates.
@@ -182,18 +93,25 @@ URN-Keyed Storage: Using the unique URN (Unique Reference Number) as cache key e
 Graceful Degradation: If cache fails, the system falls back to live API calls rather than erroring. Users experience slower response times but maintain functionality.
 
 Technology Stack
+
 Application Layer
-TechnologyPurposeStreamlitInteractive web UI with dark themePydanticData validation and type-safe modelsOpenPyXLExcel export for offline analysisPandasData manipulation and CSV processing
+TechnologyPurposeStreamlitInteractive web UI with dark themePydanticData validation and type-safe modelsOpenPyXLExcel export for offline analysisPandasData manipulation and CSV processing.
+
 AI & Orchestration
-TechnologyPurposeLangChainChain composition and prompt managementClaude Sonnet 4Conversation starter generationSerper APIOfsted report discoveryPyPDF2PDF text extraction
+TechnologyPurposeLangChainChain composition and prompt managementClaude Sonnet 4Conversation starter generationSerper APIOfsted report discoveryPyPDF2PDF text extraction.
+
 Infrastructure
-TechnologyPurposeDatabricksHosting, authentication, deploymentPython 3.10+Runtime environmentSimpleCacheIn-memory caching with TTL
+TechnologyPurposeDatabricksHosting, authentication, deploymentPython 3.10+Runtime environmentSimpleCacheIn-memory caching with TTL.
+
 Data Sources
 SourceFormatUpdate FrequencyGIASCSVMonthlySchool Financial BenchmarkingCSVAnnualSEND StatisticsCSVTermly
 
 Data Pipeline
 Entity Resolution
 Schools are matched across datasets using the URN (Unique Reference Number), the authoritative identifier assigned by the Department for Education:
+
+
+
 GIAS CSV (3,187 schools)
     │
     ├── URN: 100000 ──┬── Financial CSV (2,570 schools)
@@ -203,6 +121,8 @@ GIAS CSV (3,187 schools)
     └── URN: 100000 ──┬── SEND CSV (24,481 records)
                       │
                       └── Match on URN ──► Complete View
+
+
 Data Quality Handling
 IssueResolutionMissing financial dataDisplay "Financial data unavailable" - don't failMultiple SEND records per schoolAggregate to school level with latest academic yearInconsistent school namesUse GIAS as canonical source, fuzzy match for displayNull headteacher fieldsGraceful fallback to "Contact details pending"
 Financial Metrics Derived
@@ -217,6 +137,7 @@ These derived metrics power the AI-generated insights about budget pressures and
 
 Project Journey
 This project evolved through 4 phases, from data exploration to production deployment.
+
 Phase 1: Data Engineering & Discovery ✅
 
 Acquired and analysed government datasets (GIAS, Financial Benchmarking, SEND)
@@ -225,6 +146,7 @@ Identified key metrics that signal recruitment opportunities
 Created Pydantic models for type-safe data handling
 
 Result: Unified dataset covering 3,187 schools with financial, operational, and SEND profiles
+
 Phase 2: AI Integration & Prompt Engineering ✅
 
 Evaluated Claude Sonnet 4 vs GPT-4 for conversation generation
@@ -233,6 +155,7 @@ Implemented LangChain chains with error handling and retries
 Built Serper integration for Ofsted PDF discovery
 
 Result: Consistent, high-quality conversation starters with 40-60 second generation time
+
 Phase 3: UI Development & User Experience ✅
 
 Designed dark-themed interface matching consultant workflows
@@ -241,6 +164,7 @@ Created tabbed deep-dive pages (Contact, Financial, SEND, Conversation Starters)
 Implemented shortlist functionality and Excel export
 
 Result: Intuitive interface requiring zero training for consultants
+
 Phase 4: Production Deployment & Optimisation ✅
 
 Deployed to Databricks with password authentication
@@ -251,12 +175,16 @@ Load tested with concurrent user simulation
 Result: Production system serving 450 consultants with sub-60-second response times
 
 Results & Impact
+
 Performance Metrics
 MetricValueContextResponse Time40-60 secondsFull profile with AI-generated startersCache Hit Rate85%+Based on 450 consultants, ~40 schools/day eachData Coverage3,187 schoolsComplete London region coverageUptime99.5%+Databricks managed infrastructure
+
 Cost Analysis
 ComponentMonthly CostNotesClaude API (with caching)~£80-10085% cache hit rateClaude API (without caching)~£500+Theoretical uncached costSerper API£40Ofsted PDF discoveryDatabricks HostingIncludedPart of existing enterprise licenseTotal~£140/month
+
 Business Impact
 MetricImpactResearch time reduction30 mins → 60 seconds (97%)Consultant capacity increase4x more schools researched per dayInformation completenessSingle unified view vs 3+ separate portalsEstimated annual time savings15,000+ consultant hours
+
 Conversation Starter Quality
 The AI-generated starters are evaluated against three criteria:
 
@@ -270,9 +198,11 @@ Example output for a high-SEND school:
 
 
 Limitations & Future Development
+
 Current Limitation
 Real-time Ofsted Integration: The current implementation searches for Ofsted PDFs on-demand via Serper API, adding latency and a £40/month cost. A more robust solution would pre-index Ofsted reports in a vector database, enabling instant retrieval and semantic search across inspection findings.
-Planned Resolution: Phase 5 will implement a RAG pipeline with Qdrant vector database, pre-processing all Ofsted reports into searchable embeddings. This eliminates the Serper dependency and enables questions like "Show me schools where Ofsted mentioned safeguarding concerns" across the entire dataset.
+
+Planned Resolution: The next phase will implement a RAG pipeline with Qdrant vector database, pre-processing all Ofsted reports into searchable embeddings. This eliminates the Serper dependency and enables questions like "Show me schools where Ofsted mentioned safeguarding concerns" across the entire dataset.
 
 Future Roadmap
 PhaseFeatureImpactPhase 5Ofsted RAG PipelineInstant Ofsted insights, semantic searchPhase 6CRM IntegrationAuto-populate Bullhorn/Vincere with researchPhase 7Predictive ScoringML model to rank schools by placement likelihoodPhase 8Regional ExpansionScale beyond London to national coverage
@@ -287,7 +217,7 @@ Domain expertise: Deep understanding of education recruitment workflows
 
 
 Contact
-YasmINA Lyons 
+Yasmina Lyons 
 AI Architect & Engineer
 
 LinkedIn: linkedin.com/in/yasmeen-lyons
