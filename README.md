@@ -261,7 +261,6 @@ Contact
 Yasmina Lyons 
 AI Architect & Engineer
 
-LinkedIn: linkedin.com/in/yasmeen-lyons
-TikTok: 40,000+ followers on AI & Tech content
+LinkedIn: linkedin.com/in/yasmina-lyons
 
 Currently serving as sole AI specialist for 400-employee education recruitment organisation, delivering production AI systems that generate measurable business impact.
