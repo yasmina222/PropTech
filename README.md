@@ -1,4 +1,4 @@
-School Research and Prospecting Assistant 
+**School Research and Prospecting Assistant**
 
 AI-Powered Sales Intelligence Platform for Education Recruitment
 
@@ -22,7 +22,7 @@ Table of Contents
 - Contact
 
 
-Business Context
+**Business Context**
 The Problem
 Education recruitment consultants face a critical information asymmetry when engaging with schools:
 
@@ -31,15 +31,31 @@ Information Fragmentation: School financial data, SEND provisions, Ofsted rating
 Missed Intelligence: Without understanding a school's budget pressures, staffing costs, or special educational needs profile, consultants enter conversations blind to the school's actual pain points
 Competitive Disadvantage: Agencies that can't rapidly contextualise school needs lose placements to better-prepared competitors
 
-Business Impact
-For a recruitment organisation with 450 consultants, each making multiple school contacts daily:
-MetricBeforeAfterImpactResearch time per school30 mins60 seconds97% reductionDaily capacity per consultant8-10 schools40+ schools4x increaseInformation completenessFragmentedUnified viewSingle source of truthConversation relevanceGeneric pitchesTailored insightsHigher conversion potential
-The Dataset
-The platform synthesises three authoritative government data sources:
-SourceRecordsCoverageGIAS (Get Information About Schools)3,187 schoolsSchool details, headteacher contacts, addresses, trust affiliationsSchool Financial Benchmarking2,570 schoolsExpenditure breakdown, staffing costs, budget analysisSEND Statistics24,481 recordsSEN support levels, EHC plans, primary need categories
-Target Users: 450 recruitment consultants across Protocol Education
+###  Business Impact
+*For a recruitment organisation with 450 consultants, each making multiple school contacts daily.*
 
-Solution Overview
+| Metric | Before | After | Impact |
+| :--- | :--- | :--- | :--- |
+| **Research time per school** | 30 mins | 60 seconds | **97% reduction** |
+| **Daily capacity per consultant** | 8-10 schools | 40+ schools | **4x increase** |
+| **Information completeness** | Fragmented | Unified view | **Single source of truth** |
+| **Conversation relevance** | Generic pitches | Tailored insights | **Higher conversion potential** |
+
+<br>
+
+###  The Dataset
+*The platform synthesises three authoritative government data sources.*
+
+| Source | Records | Coverage |
+| :--- | :--- | :--- |
+| **GIAS** (Get Information About Schools) | 3,187 schools | School details, headteacher contacts, addresses, trust affiliations |
+| **School Financial Benchmarking** | 2,570 schools | Expenditure breakdown, staffing costs, budget analysis |
+| **SEND Statistics** | 24,481 records | SEN support levels, EHC plans, primary need categories |
+
+**Target Users:** 450 recruitment consultants across Protocol Education
+
+
+**Solution Overview**
 The School Research Assistant is a production-grade AI application that consolidates fragmented school data into actionable sales intelligence, generating contextualised conversation starters powered by Claude Sonnet 4.
 What Makes This Production-Grade?
 ✅ Intelligent Data Fusion: Merges financial, operational, and SEND data across 3,000+ schools using URN-based entity resolution
@@ -54,45 +70,45 @@ What Makes This Production-Grade?
 
 ✅ Scalable Design: Handles 450 concurrent users with horizontal scaling capability
 
-Architecture
+**Architecture**
 System Overview
 
 <img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/b3831b6b-fb78-4a64-aea6-b39320781dcd" />
 
 
-Architecture & Design Decisions
+**Architecture & Design Decisions**
 
 Production AI systems require deliberate architectural choices that balance user experience, cost efficiency, and maintainability. This section outlines the key design decisions and their rationale.
 
-Why Streamlit? Rapid Deployment with Enterprise Capability
+**Why Streamlit? Rapid Deployment with Enterprise Capability**
 The choice of Streamlit over alternatives like Flask, FastAPI, or React was driven by three strategic considerations:
 Speed to Value: Streamlit's declarative approach allowed the complete UI to be built in days rather than weeks. For an internal tool where time-to-deployment directly impacts business value, this acceleration was critical.
 Databricks Native Integration: Streamlit apps deploy directly within the Databricks workspace, inheriting existing authentication, networking, and security configurations. This eliminated the need for separate infrastructure provisioning and reduced the attack surface.
 Consultant-Friendly Interface: The target users are recruitment consultants, not technical staff. Streamlit's clean, interactive widgets (dropdowns, search bars, data tables) provide an intuitive experience without requiring frontend development expertise.
 Trade-off Acknowledged: Streamlit's single-threaded model limits concurrent request handling. For 450 users, this is mitigated through aggressive caching and the bursty nature of consultant workflows (research happens in concentrated periods, not continuously).
 
-Why LangChain? Orchestration Without Lock-In
+**Why LangChain? Orchestration Without Lock-In**
 LangChain serves as the orchestration layer between the application and Claude, chosen for specific architectural benefits:
 Chain Composition: The platform requires multiple AI operations (financial analysis, SEND opportunity detection, Ofsted synthesis) that can be composed, cached, and error-handled independently. LangChain's chain abstraction maps directly to this requirement.
 Prompt Templating: Conversation starters require dynamic injection of school-specific data into carefully crafted prompts. LangChain's PromptTemplate system separates prompt engineering from application logic, enabling iteration without code changes.
 Provider Flexibility: While currently using Claude, LangChain's abstraction layer means switching to Azure OpenAI or other providers requires only configuration changes—not application rewrites. This protects against vendor lock-in and enables A/B testing of models.
 MIT Licensed: LangChain is fully open source under MIT license, with no commercial restrictions. Major enterprises (Microsoft, Google, Amazon) use it in production, validating its enterprise readiness.
 
-Why Claude Sonnet 4? Precision Over Power
+**Why Claude Sonnet 4? Precision Over Power**
 The model selection was driven by the specific nature of the task:
 Instruction Following: Conversation starters require strict adherence to output formats (structured JSON with specific fields). Claude Sonnet 4 demonstrates superior instruction-following compared to alternatives tested, reducing post-processing overhead.
 Cost-Performance Balance: At $3/1M input tokens and $15/1M output tokens, Sonnet 4 offers the optimal trade-off for this use case. The tasks don't require Opus-level reasoning, and Haiku's occasional format inconsistencies increase error handling complexity.
 Consistent Tone: Recruitment conversations require professional but approachable language. Claude's training produces more naturally conversational outputs than GPT-4 alternatives in internal testing.
 UK Context Awareness: Claude demonstrates strong understanding of UK education terminology (Ofsted, EHC Plans, Local Authorities, Academy Trusts) without requiring extensive prompt engineering to establish context.
 
-Why This Caching Strategy? Economics at Scale
+**Why This Caching Strategy? Economics at Scale**
 The caching architecture is the most critical cost control mechanism:
 24-Hour TTL: School data changes infrequently (financial data is annual, SEND data is termly). A 24-hour cache provides fresh-enough data while maximising hit rates.
 URN-Keyed Storage: Using the unique URN (Unique Reference Number) as cache key ensures deterministic lookups and prevents duplicate API calls for the same school across different consultants.
 85%+ Hit Rate Achievement: With 450 consultants researching ~40 schools daily, significant overlap occurs (popular schools, target regions). Analysis shows 85%+ of requests hit cached results, reducing API costs from an estimated £500/month to under £100/month.
 Graceful Degradation: If cache fails, the system falls back to live API calls rather than erroring. Users experience slower response times but maintain functionality.
 
-Technology Stack
+**Technology Stack**
 
 Application Layer
 TechnologyPurposeStreamlitInteractive web UI with dark themePydanticData validation and type-safe modelsOpenPyXLExcel export for offline analysisPandasData manipulation and CSV processing.
@@ -100,13 +116,13 @@ TechnologyPurposeStreamlitInteractive web UI with dark themePydanticData validat
 AI & Orchestration
 TechnologyPurposeLangChainChain composition and prompt managementClaude Sonnet 4Conversation starter generationSerper APIOfsted report discoveryPyPDF2PDF text extraction.
 
-Infrastructure
+**Infrastructure**
 TechnologyPurposeDatabricksHosting, authentication, deploymentPython 3.10+Runtime environmentSimpleCacheIn-memory caching with TTL.
 
 Data Sources
 SourceFormatUpdate FrequencyGIASCSVMonthlySchool Financial BenchmarkingCSVAnnualSEND StatisticsCSVTermly
 
-Data Pipeline
+**Data Pipeline**
 Entity Resolution
 Schools are matched across datasets using the URN (Unique Reference Number), the authoritative identifier assigned by the Department for Education:
 
