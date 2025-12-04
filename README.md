@@ -108,19 +108,44 @@ URN-Keyed Storage: Using the unique URN (Unique Reference Number) as cache key e
 85%+ Hit Rate Achievement: With 450 consultants researching ~40 schools daily, significant overlap occurs (popular schools, target regions). Analysis shows 85%+ of requests hit cached results, reducing API costs from an estimated £500/month to under £100/month.
 Graceful Degradation: If cache fails, the system falls back to live API calls rather than erroring. Users experience slower response times but maintain functionality.
 
-**Technology Stack**
+##  Technology Stack
 
-Application Layer
-TechnologyPurposeStreamlitInteractive web UI with dark themePydanticData validation and type-safe modelsOpenPyXLExcel export for offline analysisPandasData manipulation and CSV processing.
+###  Application Layer
+| Technology | Purpose |
+| :--- | :--- |
+| **Streamlit** | Interactive web UI with dark theme |
+| **Pydantic** | Data validation and type-safe models |
+| **OpenPyXL** | Excel export for offline analysis |
+| **Pandas** | Data manipulation and CSV processing |
 
-AI & Orchestration
-TechnologyPurposeLangChainChain composition and prompt managementClaude Sonnet 4Conversation starter generationSerper APIOfsted report discoveryPyPDF2PDF text extraction.
+<br>
 
-**Infrastructure**
-TechnologyPurposeDatabricksHosting, authentication, deploymentPython 3.10+Runtime environmentSimpleCacheIn-memory caching with TTL.
+###  AI & Orchestration
+| Technology | Purpose |
+| :--- | :--- |
+| **LangChain** | Chain composition and prompt management |
+| **Claude Sonnet 4** | Conversation starter generation |
+| **Serper API** | Ofsted report discovery |
+| **PyPDF2** | PDF text extraction |
 
-Data Sources
-SourceFormatUpdate FrequencyGIASCSVMonthlySchool Financial BenchmarkingCSVAnnualSEND StatisticsCSVTermly
+<br>
+
+###  Infrastructure
+| Technology | Purpose |
+| :--- | :--- |
+| **Databricks** | Hosting, authentication, deployment |
+| **Python 3.10+** | Runtime environment |
+| **SimpleCache** | In-memory caching with TTL |
+
+<br>
+
+###  Data Sources
+| Source | Format | Update Frequency |
+| :--- | :--- | :--- |
+| **GIAS** | CSV | Monthly |
+| **School Financial Benchmarking** | CSV | Annual |
+| **SEND Statistics** | CSV | Termly |
+
 
 **Data Pipeline**
 Entity Resolution
