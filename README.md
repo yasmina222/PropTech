@@ -1,8 +1,9 @@
-**School Research and Prospecting Assistant**
+### School Research and Prospecting Assistant
 
 AI-Powered Sales Intelligence Platform for Education Recruitment
 
 <img width="1266" height="611" alt="image" src="https://github.com/user-attachments/assets/aaa44b86-f683-4df2-b402-9341ddf2086f" />
+
 
 
 Enterprise-grade competitive intelligence system that transforms how recruitment consultants prepare for school engagement, reducing research time from 30 minutes to under 60 seconds.
@@ -21,8 +22,7 @@ Table of Contents
 - Future Roadmap
 - Contact
 
-
-**Business Context**
+### Business Context
 The Problem
 Education recruitment consultants face a critical information asymmetry when engaging with schools:
 
