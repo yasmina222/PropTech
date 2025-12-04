@@ -16,6 +16,7 @@ Results & Impact
 Future Roadmap
 Contact
 
+<img width="1266" height="611" alt="image" src="https://github.com/user-attachments/assets/aaa44b86-f683-4df2-b402-9341ddf2086f" />
 
 Business Context
 The Problem
