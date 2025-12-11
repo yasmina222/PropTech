@@ -1372,8 +1372,7 @@ def render_send_details(school: School):
         st.markdown("""
         <div style="background-color: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem;">
             <span style="font-size: 0.85rem; color: #93c5fd;">
-                💡 <strong>Remember:</strong> Each EHC Plan represents a legally-mandated support position. 
-                Schools MUST provide this support or face legal action.
+                💡 <strong>Remember:</strong> Each EHC Plan represents a legally-mandated support position.
             </span>
         </div>
         """, unsafe_allow_html=True)
