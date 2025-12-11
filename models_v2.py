@@ -250,7 +250,7 @@ class SENDData(BaseModel):
     """SEND data from DfE Special Educational Needs dataset"""
     total_pupils: Optional[int] = Field(default=None)
     sen_support: Optional[int] = Field(default=None, description="Pupils with SEN Support (no EHC plan)")
-    ehc_plan: Optional[int] = Field(default=None, description="Pupils with EHC plans (legally binding)")
+    ehc_plan: Optional[int] = Field(default=None, description="Pupils with EHC plans")
     
     has_sen_unit: bool = Field(default=False, description="School has dedicated SEN unit")
     has_resourced_provision: bool = Field(default=False, description="School has resourced provision")
@@ -291,7 +291,7 @@ class SENDData(BaseModel):
         """
         Priority scoring based on sales value analysis:
         - SEN Unit or Resourced Provision = guaranteed ongoing demand
-        - EHC plans = legally binding, school MUST provide support
+        - EHC plans = School MUST provide support
         - ASD/SEMH = specialist needs, harder to staff
         """
         score = 0
@@ -362,12 +362,12 @@ class SENDData(BaseModel):
             return {
                 "headline": "Very High EHC Demand",
                 "count": ehc,
-                "detail": f"{ehc} pupils with EHC Plans requiring legally-mandated support.",
+                "detail": f"{ehc} pupils with EHC Plans must be allocated a specialised Teaching Assistant.",
                 "alert_type": "hot",
                 "alert_icon": "🔥",
                 "opportunity": f"{ehc} legally-mandated 1:1 support positions",
                 "top_needs": needs_text,
-                "sales_action": f"MAJOR OPPORTUNITY - {ehc} EHC Plans means {ehc} legally-required support positions. Schools face legal action if they don't provide this support. Ask about their current SEND staffing challenges."
+                "sales_action": f"MAJOR OPPORTUNITY - {ehc} EHC Plans means {ehc} legally-required support positions. Ask about their current SEND staffing challenges."
             }
         elif ehc >= 10:
             return {
@@ -378,7 +378,7 @@ class SENDData(BaseModel):
                 "alert_icon": "⚡",
                 "opportunity": f"{ehc} legally-mandated support positions",
                 "top_needs": needs_text,
-                "sales_action": f"STRONG OPPORTUNITY - {ehc} EHC Plans = {ehc} roles the school MUST fill. These are legally binding - the school has no choice but to provide support."
+                "sales_action": f"STRONG OPPORTUNITY - {ehc} EHC Plans = {ehc} roles the school MUST fill. These are legally binding and school must invest in providing support."
             }
         elif ehc >= 5:
             return {
