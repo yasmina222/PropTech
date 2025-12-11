@@ -1,5 +1,6 @@
 """
 School Research Assistant - Pydantic Models (v2)
+Updated with Sales Intelligence helper methods
 """
 
 from pydantic import BaseModel, Field, field_validator
@@ -96,6 +97,127 @@ class FinancialData(BaseModel):
             return "MEDIUM"
         else:
             return "LOW"
+    
+    # =========================================================================
+    # NEW: Sales Intelligence Methods for Agency Spend
+    # =========================================================================
+    
+    def get_agency_priority_level(self) -> str:
+        """Get priority level based specifically on agency spend"""
+        if self.agency_supply_costs is None:
+            return "UNKNOWN"
+        if self.agency_supply_costs >= 100000:
+            return "HIGH"
+        elif self.agency_supply_costs >= 50000:
+            return "MEDIUM"
+        elif self.agency_supply_costs > 0:
+            return "LOW"
+        else:
+            return "NONE"
+    
+    def get_agency_spend_insight(self) -> Dict[str, Any]:
+        """
+        Get sales-focused insight about agency spend.
+        Returns dict with headline, detail, alert_type, and sales_action.
+        """
+        if self.agency_supply_costs is None or self.agency_supply_costs == 0:
+            # Check if they have high staffing but no agency - interesting signal
+            if self.total_teaching_support_costs and self.total_teaching_support_costs >= 500000:
+                return {
+                    "headline": "No Agency Spend Recorded",
+                    "amount": "£0",
+                    "per_pupil": "£0/pupil",
+                    "detail": f"This school has a £{self.total_teaching_support_costs:,.0f} staffing budget but no recorded agency spend.",
+                    "alert_type": "investigate",
+                    "alert_icon": "🔍",
+                    "sales_action": "Worth investigating - they may recruit direct, use a different agency, or data may be incomplete. A large budget with no agency use could be an untapped opportunity."
+                }
+            return {
+                "headline": "No Agency Spend",
+                "amount": "£0",
+                "per_pupil": "£0/pupil",
+                "detail": "No agency supply spend recorded for this school.",
+                "alert_type": "low",
+                "alert_icon": "ℹ️",
+                "sales_action": "Lower priority - may not currently use agency staff."
+            }
+        
+        amount = self.agency_supply_costs
+        per_pupil = self.get_agency_per_pupil() or 0
+        
+        if amount >= 100000:
+            return {
+                "headline": "High Agency Spender",
+                "amount": f"£{amount:,.0f}",
+                "per_pupil": f"£{per_pupil:,.0f}/pupil",
+                "detail": f"This school invests £{amount:,.0f} annually in agency staff (£{per_pupil:,.0f} per pupil).",
+                "alert_type": "hot",
+                "alert_icon": "🔥",
+                "sales_action": "PROVEN BUYER - This school already uses agencies and has significant budget. Focus on winning their business by demonstrating quality and reliability."
+            }
+        elif amount >= 50000:
+            return {
+                "headline": "Active Agency User",
+                "amount": f"£{amount:,.0f}",
+                "per_pupil": f"£{per_pupil:,.0f}/pupil",
+                "detail": f"This school spends £{amount:,.0f} annually on agency staff (£{per_pupil:,.0f} per pupil).",
+                "alert_type": "warm",
+                "alert_icon": "🎯",
+                "sales_action": "CONFIRMED BUYER - They have budget and use agencies. Position yourself as a quality alternative to their current provider."
+            }
+        else:
+            return {
+                "headline": "Light Agency User",
+                "amount": f"£{amount:,.0f}",
+                "per_pupil": f"£{per_pupil:,.0f}/pupil",
+                "detail": f"This school has a smaller agency budget of £{amount:,.0f} annually.",
+                "alert_type": "cool",
+                "alert_icon": "📊",
+                "sales_action": "Occasional user - likely uses agency for emergency cover only. May be open to building a relationship for when needs arise."
+            }
+    
+    def get_staffing_spend_insight(self) -> Dict[str, Any]:
+        """Get insight about total staffing spend"""
+        if self.total_teaching_support_costs is None or self.total_teaching_support_costs == 0:
+            return {
+                "headline": "No Staffing Data",
+                "amount": "N/A",
+                "per_pupil": "N/A",
+                "detail": "No staffing expenditure data available.",
+                "alert_type": "unknown",
+                "alert_icon": "❓"
+            }
+        
+        amount = self.total_teaching_support_costs
+        per_pupil = amount / self.total_pupils if self.total_pupils and self.total_pupils > 0 else 0
+        
+        if amount >= 1000000:
+            return {
+                "headline": "Large Staffing Budget",
+                "amount": f"£{amount:,.0f}",
+                "per_pupil": f"£{per_pupil:,.0f}/pupil",
+                "detail": f"Major staffing investment of £{amount/1000000:.1f}M annually.",
+                "alert_type": "high",
+                "alert_icon": "💰"
+            }
+        elif amount >= 500000:
+            return {
+                "headline": "Significant Staffing Budget",
+                "amount": f"£{amount:,.0f}",
+                "per_pupil": f"£{per_pupil:,.0f}/pupil",
+                "detail": f"Substantial staffing budget of £{amount:,.0f} annually.",
+                "alert_type": "medium",
+                "alert_icon": "📈"
+            }
+        else:
+            return {
+                "headline": "Moderate Staffing Budget",
+                "amount": f"£{amount:,.0f}",
+                "per_pupil": f"£{per_pupil:,.0f}/pupil",
+                "detail": f"Staffing budget of £{amount:,.0f} annually.",
+                "alert_type": "low",
+                "alert_icon": "📊"
+            }
     
     def get_financial_summary(self) -> str:
         lines = []
@@ -209,6 +331,154 @@ class SENDData(BaseModel):
         ]
         sorted_needs = sorted(needs, key=lambda x: x[1], reverse=True)
         return [(n, c) for n, c in sorted_needs[:limit] if c > 0]
+    
+    # =========================================================================
+    # NEW: Sales Intelligence Methods for SEND
+    # =========================================================================
+    
+    def get_ehc_opportunity_insight(self) -> Dict[str, Any]:
+        """
+        Get sales-focused insight about EHC Plans.
+        EHC Plans are LEGALLY BINDING - schools MUST provide support.
+        """
+        ehc = self.ehc_plan or 0
+        
+        if ehc == 0:
+            return {
+                "headline": "No EHC Plans",
+                "count": 0,
+                "detail": "No pupils with EHC plans recorded.",
+                "alert_type": "low",
+                "alert_icon": "ℹ️",
+                "opportunity": None,
+                "sales_action": "Limited SEND opportunity based on EHC data."
+            }
+        
+        # Get top needs for context
+        top_needs = self.get_top_needs(3)
+        needs_text = ", ".join([f"{name}: {count}" for name, count in top_needs]) if top_needs else "Not specified"
+        
+        if ehc >= 20:
+            return {
+                "headline": "Very High EHC Demand",
+                "count": ehc,
+                "detail": f"{ehc} pupils with EHC Plans requiring legally-mandated support.",
+                "alert_type": "hot",
+                "alert_icon": "🔥",
+                "opportunity": f"{ehc} legally-mandated 1:1 support positions",
+                "top_needs": needs_text,
+                "sales_action": f"MAJOR OPPORTUNITY - {ehc} EHC Plans means {ehc} legally-required support positions. Schools face legal action if they don't provide this support. Ask about their current SEND staffing challenges."
+            }
+        elif ehc >= 10:
+            return {
+                "headline": "High EHC Demand",
+                "count": ehc,
+                "detail": f"{ehc} pupils with EHC Plans - significant support requirement.",
+                "alert_type": "warm",
+                "alert_icon": "⚡",
+                "opportunity": f"{ehc} legally-mandated support positions",
+                "top_needs": needs_text,
+                "sales_action": f"STRONG OPPORTUNITY - {ehc} EHC Plans = {ehc} roles the school MUST fill. These are legally binding - the school has no choice but to provide support."
+            }
+        elif ehc >= 5:
+            return {
+                "headline": "Moderate EHC Demand",
+                "count": ehc,
+                "detail": f"{ehc} pupils with EHC Plans.",
+                "alert_type": "medium",
+                "alert_icon": "🎯",
+                "opportunity": f"{ehc} support positions",
+                "top_needs": needs_text,
+                "sales_action": f"OPPORTUNITY - {ehc} EHC Plans indicate ongoing SEND staffing needs. Worth discussing their 1:1 support arrangements."
+            }
+        else:
+            return {
+                "headline": "Some EHC Pupils",
+                "count": ehc,
+                "detail": f"{ehc} pupils with EHC Plans.",
+                "alert_type": "low",
+                "alert_icon": "📊",
+                "opportunity": f"{ehc} support positions",
+                "top_needs": needs_text,
+                "sales_action": "Smaller SEND opportunity, but still worth mentioning if they struggle to find quality SEND staff."
+            }
+    
+    def get_send_infrastructure_insight(self) -> Optional[Dict[str, Any]]:
+        """
+        Get insight about dedicated SEND infrastructure (SEN Units, Resourced Provision).
+        These indicate ONGOING, RECURRING staffing needs.
+        """
+        if not self.has_sen_unit and not self.has_resourced_provision:
+            return None
+        
+        provisions = []
+        if self.has_sen_unit:
+            provisions.append("SEN Unit")
+        if self.has_resourced_provision:
+            provisions.append("Resourced Provision")
+        
+        provision_text = " and ".join(provisions)
+        
+        return {
+            "headline": f"Dedicated SEND Infrastructure",
+            "provisions": provisions,
+            "detail": f"This school has a {provision_text} - dedicated SEND facilities requiring specialist staff.",
+            "alert_type": "hot",
+            "alert_icon": "🏫",
+            "sales_action": f"HOT LEAD - A {provision_text} means ongoing, recurring staffing needs. This isn't a one-off booking opportunity - it's potential for a long-term client relationship. Ask about their staffing model and cover arrangements."
+        }
+    
+    def get_send_summary_insight(self) -> Dict[str, Any]:
+        """Get overall SEND summary with sales context"""
+        total_send = self.get_total_send()
+        pct = self.get_send_percentage()
+        ehc = self.ehc_plan or 0
+        sen_support = self.sen_support or 0
+        
+        if total_send == 0:
+            return {
+                "headline": "No SEND Data",
+                "total": 0,
+                "percentage": "N/A",
+                "breakdown": "No SEND pupils recorded",
+                "alert_type": "unknown",
+                "alert_icon": "❓"
+            }
+        
+        breakdown_parts = []
+        if ehc > 0:
+            breakdown_parts.append(f"{ehc} with EHC Plans (legally binding)")
+        if sen_support > 0:
+            breakdown_parts.append(f"{sen_support} on SEN Support")
+        
+        pct_text = f"{pct:.1f}%" if pct else "N/A"
+        
+        if pct and pct >= 30:
+            alert_type = "hot"
+            alert_icon = "🔥"
+            context = "Very high SEND proportion - significant staffing implications"
+        elif pct and pct >= 20:
+            alert_type = "warm"
+            alert_icon = "⚡"
+            context = "High SEND proportion - strong staffing demand likely"
+        elif pct and pct >= 10:
+            alert_type = "medium"
+            alert_icon = "🎯"
+            context = "Moderate SEND proportion"
+        else:
+            alert_type = "low"
+            alert_icon = "📊"
+            context = "Lower SEND proportion"
+        
+        return {
+            "headline": f"{total_send} SEND Pupils",
+            "total": total_send,
+            "percentage": pct_text,
+            "breakdown": " | ".join(breakdown_parts),
+            "context": context,
+            "alert_type": alert_type,
+            "alert_icon": alert_icon
+        }
     
     def get_send_summary(self) -> str:
         lines = []
@@ -337,6 +607,90 @@ class School(BaseModel):
     
     def has_contact_details(self) -> bool:
         return self.headteacher is not None
+    
+    # =========================================================================
+    # NEW: Sales Intelligence Summary for School
+    # =========================================================================
+    
+    def get_sales_intelligence_summary(self) -> Dict[str, Any]:
+        """
+        Get a complete sales intelligence summary for this school.
+        This powers the hero section on the deep dive page.
+        """
+        summary = {
+            "school_name": self.school_name,
+            "urn": self.urn,
+            "agency_insight": None,
+            "staffing_insight": None,
+            "send_insight": None,
+            "ehc_insight": None,
+            "infrastructure_insight": None,
+            "why_call_reasons": [],
+            "overall_priority": self.get_combined_priority()
+        }
+        
+        # Financial insights
+        if self.financial:
+            summary["agency_insight"] = self.financial.get_agency_spend_insight()
+            summary["staffing_insight"] = self.financial.get_staffing_spend_insight()
+            
+            # Add to "why call" if relevant
+            agency = summary["agency_insight"]
+            if agency and agency["alert_type"] in ["hot", "warm"]:
+                summary["why_call_reasons"].append(
+                    f"Spends {agency['amount']} annually on agency staff (proven buyer)"
+                )
+            elif agency and agency["alert_type"] == "investigate":
+                summary["why_call_reasons"].append(
+                    f"Large staffing budget ({summary['staffing_insight']['amount']}) with no recorded agency use - potential untapped opportunity"
+                )
+        
+        # SEND insights
+        if self.send and self.send.has_send_data():
+            summary["send_insight"] = self.send.get_send_summary_insight()
+            summary["ehc_insight"] = self.send.get_ehc_opportunity_insight()
+            summary["infrastructure_insight"] = self.send.get_send_infrastructure_insight()
+            
+            # Add to "why call" if relevant
+            ehc = summary["ehc_insight"]
+            if ehc and ehc["alert_type"] in ["hot", "warm"]:
+                summary["why_call_reasons"].append(
+                    f"{ehc['count']} EHC Plans requiring legally-mandated 1:1 support"
+                )
+            
+            infra = summary["infrastructure_insight"]
+            if infra:
+                summary["why_call_reasons"].append(
+                    f"Has dedicated SEND infrastructure ({', '.join(infra['provisions'])}) - ongoing staffing needs"
+                )
+        
+        # Ofsted insights
+        if self.ofsted and self.ofsted.areas_for_improvement:
+            summary["why_call_reasons"].append(
+                f"Ofsted improvement areas that could benefit from staffing support"
+            )
+        
+        return summary
+    
+    def get_why_call_summary(self) -> str:
+        """
+        Generate a single paragraph explaining why to call this school.
+        Perfect for the consultant to read before picking up the phone.
+        """
+        intelligence = self.get_sales_intelligence_summary()
+        reasons = intelligence["why_call_reasons"]
+        
+        if not reasons:
+            return f"{self.school_name} - Limited intelligence available. Consider researching further before calling."
+        
+        # Build the summary
+        if len(reasons) == 1:
+            return f"{self.school_name}: {reasons[0]}."
+        elif len(reasons) == 2:
+            return f"{self.school_name}: {reasons[0]}, and {reasons[1].lower()}."
+        else:
+            main_reasons = ", ".join(reasons[:-1])
+            return f"{self.school_name}: {main_reasons}, and {reasons[-1].lower()}."
     
     def to_llm_context(self) -> str:
         lines = [
