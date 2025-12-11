@@ -1,6 +1,7 @@
 """
 School Research Assistant - Streamlit App (v3)
 Redesigned UI with Table View and Deep Dive Pages
+UPDATED: Added Sales Intelligence Summary with contextual alerts
 """
 
 import streamlit as st
@@ -424,6 +425,133 @@ st.markdown("""
         display: inline-block;
     }
     
+    /* =========================================================================
+       NEW: Sales Intelligence Summary Styles
+       ========================================================================= */
+    
+    .intel-summary-container {
+        background: linear-gradient(135deg, #1e2530 0%, #2d3748 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #3d4a5c;
+    }
+    
+    .intel-summary-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 1rem;
+    }
+    
+    .intel-card {
+        background-color: #1a1d24;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-left: 4px solid #4a5568;
+    }
+    
+    .intel-card-hot {
+        border-left-color: #ef4444;
+        background-color: rgba(239, 68, 68, 0.1);
+    }
+    
+    .intel-card-warm {
+        border-left-color: #f59e0b;
+        background-color: rgba(245, 158, 11, 0.1);
+    }
+    
+    .intel-card-medium {
+        border-left-color: #3b82f6;
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    .intel-card-cool {
+        border-left-color: #10b981;
+        background-color: rgba(16, 185, 129, 0.1);
+    }
+    
+    .intel-card-investigate {
+        border-left-color: #8b5cf6;
+        background-color: rgba(139, 92, 246, 0.1);
+    }
+    
+    .intel-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .intel-card-icon {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+    
+    .intel-card-headline {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .intel-card-amount {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 0.25rem;
+    }
+    
+    .intel-card-subtext {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
+        color: #9ca3af;
+        margin-bottom: 0.5rem;
+    }
+    
+    .intel-card-action {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        color: #d1d5db;
+        line-height: 1.5;
+        padding: 0.75rem;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        margin-top: 0.5rem;
+    }
+    
+    .why-call-box {
+        background: linear-gradient(135deg, #1e3a5f 0%, #1e2530 100%);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        border: 1px solid #3b82f6;
+    }
+    
+    .why-call-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #60a5fa;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    
+    .why-call-text {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
+        color: #e5e7eb;
+        line-height: 1.6;
+    }
+    
     /* Hide default Streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -514,8 +642,12 @@ def export_shortlist_to_excel() -> bytes:
         fin_priority = school.get_sales_priority()
         send_priority = school.get_send_priority()
         staffing_spend = ""
-        if school.financial and school.financial.total_teaching_support_costs:
-            staffing_spend = f"£{school.financial.total_teaching_support_costs:,.0f}"
+        agency_spend = ""
+        if school.financial:
+            if school.financial.total_teaching_support_costs:
+                staffing_spend = f"£{school.financial.total_teaching_support_costs:,.0f}"
+            if school.financial.agency_supply_costs:
+                agency_spend = f"£{school.financial.agency_supply_costs:,.0f}"
         
         ehc_plans = 0
         sen_support = 0
@@ -536,11 +668,13 @@ def export_shortlist_to_excel() -> bytes:
             "Website": school.website or "",
             "Financial Priority": fin_priority,
             "Staffing Spend": staffing_spend,
+            "Agency Spend": agency_spend,
             "SEND Priority": send_priority,
             "EHC Plans": ehc_plans,
             "SEN Support": sen_support,
             "Has SEN Unit": has_sen_unit,
             "Has Resourced Provision": has_rp,
+            "Why Call": school.get_why_call_summary(),
             "Gov.uk Link": f"https://schools-financial-benchmarking.service.gov.uk/school?urn={school.urn}"
         })
         
@@ -580,6 +714,13 @@ def get_budget_display(school: School) -> str:
     if school.financial and school.financial.total_teaching_support_costs:
         return f"£{school.financial.total_teaching_support_costs:,.0f}"
     return "N/A"
+
+
+def get_agency_display(school: School) -> str:
+    """Get formatted agency spend display"""
+    if school.financial and school.financial.agency_supply_costs:
+        return f"£{school.financial.agency_supply_costs:,.0f}"
+    return "£0"
 
 
 def get_priority_badge(priority: str) -> str:
@@ -678,7 +819,7 @@ def render_sidebar(stats: dict, data_loader):
                 label="📥 Download Shortlist",
                 data=excel_data,
                 file_name=f"school_shortlist_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.spreadsheetml.sheet"
             )
         else:
             st.markdown("""
@@ -738,7 +879,7 @@ def render_list_view(schools: list, search_query: str = ""):
             "Filter list",
             placeholder="Type to filter table...",
             label_visibility="collapsed",
-            key=f"school_filter_{datetime.now().microsecond}"  # Unique key to prevent autocomplete
+            key=f"school_filter_{datetime.now().microsecond}"
         )
     
     # Filter schools by search
@@ -748,21 +889,21 @@ def render_list_view(schools: list, search_query: str = ""):
     else:
         filtered_schools = schools
     
-    # Sort by budget (highest first)
+    # Sort by AGENCY SPEND (highest first) - this is what matters most to consultants
     filtered_schools = sorted(
         filtered_schools,
-        key=lambda s: s.financial.total_teaching_support_costs if s.financial and s.financial.total_teaching_support_costs else 0,
+        key=lambda s: s.financial.agency_supply_costs if s.financial and s.financial.agency_supply_costs else 0,
         reverse=True
     )
     
     # Limit display
     display_schools = filtered_schools[:50]
     
-    # Table header
+    # Table header - UPDATED to show Agency Spend prominently
     st.markdown("""
     <div class="table-header">
         <div class="table-header-cell">School / MAT Name</div>
-        <div class="table-header-cell">Budget</div>
+        <div class="table-header-cell">Agency Spend</div>
         <div class="table-header-cell">Local Authority</div>
         <div class="table-header-cell">Priority</div>
         <div class="table-header-cell"></div>
@@ -771,7 +912,7 @@ def render_list_view(schools: list, search_query: str = ""):
     
     # Table rows
     for school in display_schools:
-        budget = get_budget_display(school)
+        agency = get_agency_display(school)
         priority = school.get_combined_priority()
         priority_badge = get_priority_badge(priority)
         la = school.la_name or "Unknown"
@@ -789,7 +930,17 @@ def render_list_view(schools: list, search_query: str = ""):
             """, unsafe_allow_html=True)
         
         with col2:
-            st.markdown(f'<div class="budget-amount">{budget}</div>', unsafe_allow_html=True)
+            # Highlight agency spend with color coding
+            if school.financial and school.financial.agency_supply_costs:
+                spend = school.financial.agency_supply_costs
+                if spend >= 100000:
+                    st.markdown(f'<div class="budget-amount" style="color: #ef4444;">🔥 {agency}</div>', unsafe_allow_html=True)
+                elif spend >= 50000:
+                    st.markdown(f'<div class="budget-amount" style="color: #f59e0b;">🎯 {agency}</div>', unsafe_allow_html=True)
+                else:
+                    st.markdown(f'<div class="budget-amount">{agency}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="budget-amount" style="color: #6b7280;">{agency}</div>', unsafe_allow_html=True)
         
         with col3:
             st.markdown(f'<div class="la-name">{la}</div>', unsafe_allow_html=True)
@@ -807,7 +958,148 @@ def render_list_view(schools: list, search_query: str = ""):
         st.markdown('<hr style="border: none; border-top: 1px solid #2d3748; margin: 0.5rem 0;">', unsafe_allow_html=True)
     
     # Show count
-    st.caption(f"Showing {len(display_schools)} of {len(filtered_schools)} schools")
+    st.caption(f"Showing {len(display_schools)} of {len(filtered_schools)} schools (sorted by Agency Spend)")
+
+
+# =============================================================================
+# NEW: SALES INTELLIGENCE SUMMARY COMPONENT
+# =============================================================================
+
+def render_sales_intelligence_summary(school: School):
+    """
+    Render the Sales Intelligence Summary - the hero section that shows
+    key metrics with context and actionable insights.
+    """
+    
+    # Get the intelligence summary from the school model
+    intel = school.get_sales_intelligence_summary()
+    
+    st.markdown("""
+    <div class="intel-summary-container">
+        <div class="intel-summary-title">📊 Sales Intelligence Summary</div>
+    """, unsafe_allow_html=True)
+    
+    # Create three columns for the main intelligence cards
+    col1, col2, col3 = st.columns(3)
+    
+    # Column 1: Agency Spend Intelligence
+    with col1:
+        agency = intel.get("agency_insight")
+        if agency:
+            card_class = f"intel-card intel-card-{agency['alert_type']}"
+            st.markdown(f"""
+            <div class="{card_class}">
+                <div class="intel-card-header">
+                    <span class="intel-card-headline">💰 Agency Spend</span>
+                    <span class="intel-card-icon">{agency['alert_icon']}</span>
+                </div>
+                <div class="intel-card-amount">{agency['amount']}</div>
+                <div class="intel-card-subtext">{agency['per_pupil']}</div>
+                <div class="intel-card-action">{agency['sales_action']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div class="intel-card">
+                <div class="intel-card-headline">💰 Agency Spend</div>
+                <div class="intel-card-amount">No Data</div>
+                <div class="intel-card-subtext">Financial data not available</div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Column 2: EHC Plans / SEND Opportunity
+    with col2:
+        ehc = intel.get("ehc_insight")
+        if ehc and ehc['count'] > 0:
+            card_class = f"intel-card intel-card-{ehc['alert_type']}"
+            top_needs = ehc.get('top_needs', 'Not specified')
+            st.markdown(f"""
+            <div class="{card_class}">
+                <div class="intel-card-header">
+                    <span class="intel-card-headline">🎯 EHC Plans</span>
+                    <span class="intel-card-icon">{ehc['alert_icon']}</span>
+                </div>
+                <div class="intel-card-amount">{ehc['count']} Plans</div>
+                <div class="intel-card-subtext">{ehc['opportunity']}</div>
+                <div class="intel-card-action">{ehc['sales_action']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            send_summary = intel.get("send_insight")
+            if send_summary and send_summary['total'] > 0:
+                st.markdown(f"""
+                <div class="intel-card intel-card-{send_summary['alert_type']}">
+                    <div class="intel-card-header">
+                        <span class="intel-card-headline">🎯 SEND Pupils</span>
+                        <span class="intel-card-icon">{send_summary['alert_icon']}</span>
+                    </div>
+                    <div class="intel-card-amount">{send_summary['total']} Pupils</div>
+                    <div class="intel-card-subtext">{send_summary['percentage']} of school</div>
+                    <div class="intel-card-action">{send_summary['context']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div class="intel-card">
+                    <div class="intel-card-headline">🎯 SEND Data</div>
+                    <div class="intel-card-amount">No Data</div>
+                    <div class="intel-card-subtext">SEND information not available</div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # Column 3: SEND Infrastructure OR Total Staffing
+    with col3:
+        infra = intel.get("infrastructure_insight")
+        if infra:
+            # Show SEN Unit / Resourced Provision - this is HOT
+            st.markdown(f"""
+            <div class="intel-card intel-card-hot">
+                <div class="intel-card-header">
+                    <span class="intel-card-headline">🏫 SEND Infrastructure</span>
+                    <span class="intel-card-icon">{infra['alert_icon']}</span>
+                </div>
+                <div class="intel-card-amount">{' + '.join(infra['provisions'])}</div>
+                <div class="intel-card-subtext">Dedicated SEND facilities</div>
+                <div class="intel-card-action">{infra['sales_action']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            # Show total staffing budget instead
+            staffing = intel.get("staffing_insight")
+            if staffing:
+                card_class = f"intel-card intel-card-{staffing['alert_type']}"
+                st.markdown(f"""
+                <div class="{card_class}">
+                    <div class="intel-card-header">
+                        <span class="intel-card-headline">📈 Total Staffing</span>
+                        <span class="intel-card-icon">{staffing['alert_icon']}</span>
+                    </div>
+                    <div class="intel-card-amount">{staffing['amount']}</div>
+                    <div class="intel-card-subtext">{staffing['per_pupil']}</div>
+                    <div class="intel-card-action">{staffing['detail']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div class="intel-card">
+                    <div class="intel-card-headline">📈 Staffing Budget</div>
+                    <div class="intel-card-amount">No Data</div>
+                    <div class="intel-card-subtext">Financial data not available</div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # Why Call This School box
+    why_call_reasons = intel.get("why_call_reasons", [])
+    if why_call_reasons:
+        why_call_text = school.get_why_call_summary()
+        st.markdown(f"""
+        <div class="why-call-box">
+            <div class="why-call-title">📞 Why Call This School</div>
+            <div class="why-call-text">{why_call_text}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # =============================================================================
@@ -821,10 +1113,10 @@ def render_deep_dive(school: School, service):
     if st.button("← Back to Search", type="primary"):
         st.session_state.view = "list"
         st.session_state.selected_urn = None
-        st.query_params.clear()  # Clear URL params so they don't override session state
+        st.query_params.clear()
         st.rerun()
     
-    # School header - using same font style as main title
+    # School header
     st.markdown(f'<div class="main-title" style="font-size: 2rem; font-weight: 500; margin-top: 0.5rem;">{school.school_name}</div>', unsafe_allow_html=True)
     
     # Quick stats row
@@ -834,8 +1126,8 @@ def render_deep_dive(school: School, service):
     with col2:
         st.metric("Local Authority", school.la_name or "Unknown")
     with col3:
-        budget = get_budget_display(school)
-        st.metric("Staffing Budget", budget)
+        agency = get_agency_display(school)
+        st.metric("Agency Spend", agency)
     with col4:
         priority = school.get_combined_priority()
         st.markdown(f"**Priority**<br>{get_priority_badge(priority)}", unsafe_allow_html=True)
@@ -848,6 +1140,11 @@ def render_deep_dive(school: School, service):
             if st.button("+ Add to Shortlist", key="shortlist_toggle"):
                 add_to_shortlist(school)
                 st.rerun()
+    
+    st.markdown("---")
+    
+    # NEW: Sales Intelligence Summary - THE HERO SECTION
+    render_sales_intelligence_summary(school)
     
     st.markdown("---")
     
@@ -962,18 +1259,29 @@ def render_financial_details(school: School):
     if school.financial and school.financial.has_financial_data():
         fin = school.financial
         
-        # Key metrics
+        # Key metrics - AGENCY SPEND FIRST
         col1, col2, col3 = st.columns(3)
         
         with col1:
+            if fin.agency_supply_costs:
+                st.metric("🔥 Agency Supply Spend", f"£{fin.agency_supply_costs:,.0f}")
+            else:
+                st.metric("Agency Supply Spend", "£0")
+        with col2:
             if fin.total_teaching_support_costs:
                 st.metric("Total Staffing Costs", f"£{fin.total_teaching_support_costs:,.0f}")
-        with col2:
+        with col3:
             if fin.total_expenditure:
                 st.metric("Total Expenditure", f"£{fin.total_expenditure:,.0f}")
-        with col3:
-            if fin.agency_supply_costs:
-                st.metric("Agency Supply", f"£{fin.agency_supply_costs:,.0f}")
+        
+        # Agency spend insight box
+        agency_insight = fin.get_agency_spend_insight()
+        if agency_insight['alert_type'] == 'hot':
+            st.success(f"🔥 **{agency_insight['headline']}** - {agency_insight['sales_action']}")
+        elif agency_insight['alert_type'] == 'warm':
+            st.info(f"🎯 **{agency_insight['headline']}** - {agency_insight['sales_action']}")
+        elif agency_insight['alert_type'] == 'investigate':
+            st.warning(f"🔍 **{agency_insight['headline']}** - {agency_insight['sales_action']}")
         
         st.markdown("---")
         
@@ -984,33 +1292,29 @@ def render_financial_details(school: School):
         """, unsafe_allow_html=True)
         
         costs = [
-            ("Total Staffing Costs", fin.total_teaching_support_costs),
-            ("Teaching Staff (E01)", fin.teaching_staff_costs),
-            ("Supply Teaching (E02)", fin.supply_teaching_costs),
-            ("Educational Support (E03)", fin.educational_support_costs),
-            ("Agency Supply (E26)", fin.agency_supply_costs),
-            ("Consultancy (E27)", fin.educational_consultancy_costs),
+            ("Agency Supply (E26) ⭐", fin.agency_supply_costs, True),
+            ("Total Staffing Costs", fin.total_teaching_support_costs, False),
+            ("Teaching Staff (E01)", fin.teaching_staff_costs, False),
+            ("Supply Teaching (E02)", fin.supply_teaching_costs, False),
+            ("Educational Support (E03)", fin.educational_support_costs, False),
+            ("Consultancy (E27)", fin.educational_consultancy_costs, False),
         ]
         
-        for label, value in costs:
+        for label, value, highlight in costs:
             if value and value > 0:
                 per_pupil = ""
                 if fin.total_pupils and fin.total_pupils > 0:
                     per_pupil = f" (£{value/fin.total_pupils:,.0f}/pupil)"
+                style = "color: #ef4444; font-weight: 600;" if highlight else ""
                 st.markdown(f"""
                 <div class="info-row">
                     <span class="info-label">{label}</span>
-                    <span class="info-value">£{value:,.0f}{per_pupil}</span>
+                    <span class="info-value" style="{style}">£{value:,.0f}{per_pupil}</span>
                 </div>
                 """, unsafe_allow_html=True)
         
         st.markdown("</div>", unsafe_allow_html=True)
         
-        # Priority insight
-        if fin.total_teaching_support_costs and fin.total_teaching_support_costs >= 500000:
-            st.success(f"🎯 **HIGH PRIORITY** - This school invests £{fin.total_teaching_support_costs:,.0f} in staffing annually!")
-        elif fin.total_teaching_support_costs and fin.total_teaching_support_costs >= 200000:
-            st.info(f"📊 **MEDIUM PRIORITY** - This school invests £{fin.total_teaching_support_costs:,.0f} in staffing annually.")
     else:
         st.info("No financial data available for this school")
 
@@ -1027,12 +1331,21 @@ def render_send_details(school: School):
         with col1:
             st.metric("Total SEND", send.get_total_send())
         with col2:
-            st.metric("EHC Plans", send.ehc_plan or 0)
+            st.metric("🔥 EHC Plans", send.ehc_plan or 0)
         with col3:
             st.metric("SEN Support", send.sen_support or 0)
         with col4:
             pct = send.get_send_percentage()
             st.metric("SEND %", f"{pct:.1f}%" if pct else "N/A")
+        
+        # EHC insight box
+        ehc_insight = send.get_ehc_opportunity_insight()
+        if ehc_insight['alert_type'] == 'hot':
+            st.success(f"🔥 **{ehc_insight['headline']}** - {ehc_insight['sales_action']}")
+        elif ehc_insight['alert_type'] == 'warm':
+            st.info(f"⚡ **{ehc_insight['headline']}** - {ehc_insight['sales_action']}")
+        elif ehc_insight['alert_type'] == 'medium':
+            st.info(f"🎯 **{ehc_insight['headline']}** - {ehc_insight['sales_action']}")
         
         # Special provision badges
         if send.has_sen_unit or send.has_resourced_provision:
@@ -1043,7 +1356,10 @@ def render_send_details(school: School):
             if send.has_resourced_provision:
                 badges_html += '<span class="sen-badge">📚 Resourced Provision</span>'
             st.markdown(f'<div style="margin: 1rem 0;">{badges_html}</div>', unsafe_allow_html=True)
-            st.warning("⭐ **HOT LEAD** - Dedicated SEND infrastructure means ongoing staffing demand!")
+            
+            infra_insight = send.get_send_infrastructure_insight()
+            if infra_insight:
+                st.warning(f"🏫 **{infra_insight['headline']}** - {infra_insight['sales_action']}")
         
         st.markdown("---")
         
@@ -1053,25 +1369,34 @@ def render_send_details(school: School):
             <div class="info-card-title">📊 EHC Plan Breakdown by Need</div>
         """, unsafe_allow_html=True)
         
+        st.markdown("""
+        <div style="background-color: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem;">
+            <span style="font-size: 0.85rem; color: #93c5fd;">
+                💡 <strong>Remember:</strong> Each EHC Plan represents a legally-mandated support position. 
+                Schools MUST provide this support or face legal action.
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+        
         needs = [
-            ("Autism (ASD)", send.ehc_asd),
-            ("SEMH", send.ehc_semh),
-            ("Speech & Language (SLCN)", send.ehc_slcn),
-            ("Severe Learning Difficulty", send.ehc_sld),
-            ("Moderate Learning Difficulty", send.ehc_mld),
-            ("Physical Disability", send.ehc_pd),
-            ("Hearing Impairment", send.ehc_hi),
-            ("Visual Impairment", send.ehc_vi),
+            ("Autism (ASD)", send.ehc_asd, "Hardest to recruit - specialist training required"),
+            ("SEMH", send.ehc_semh, "High demand - behaviour management skills needed"),
+            ("Speech & Language (SLCN)", send.ehc_slcn, "Specialist SLT support"),
+            ("Severe Learning Difficulty", send.ehc_sld, "1:1 intensive support"),
+            ("Moderate Learning Difficulty", send.ehc_mld, "General TA support"),
+            ("Physical Disability", send.ehc_pd, "Accessibility support"),
+            ("Hearing Impairment", send.ehc_hi, "Specialist communication support"),
+            ("Visual Impairment", send.ehc_vi, "Specialist support required"),
         ]
         
         sorted_needs = sorted(needs, key=lambda x: x[1] or 0, reverse=True)
         
-        for need, count in sorted_needs:
+        for need, count, note in sorted_needs:
             if count and count > 0:
                 st.markdown(f"""
                 <div class="info-row">
                     <span class="info-label">{need}</span>
-                    <span class="info-value">{count} pupils</span>
+                    <span class="info-value">{count} pupils <span style="color: #6b7280; font-size: 0.75rem;">({note})</span></span>
                 </div>
                 """, unsafe_allow_html=True)
         
@@ -1105,7 +1430,6 @@ def render_conversation_starters(school: School, service):
             </div>
             """, unsafe_allow_html=True)
             
-            # Copy button
             st.code(starter.detail, language=None)
     
     col1, col2 = st.columns([1, 3])
@@ -1163,7 +1487,7 @@ def render_conversation_starters(school: School, service):
     
     # SEND starters section
     st.markdown("### 🎯 SEND Conversation Starters")
-    st.caption("Based on SEND data (auto-generated from data)")
+    st.caption("Based on SEND data - auto-generated from EHC and SEN Support data")
     
     if school.send and school.send.has_send_data():
         send = school.send
@@ -1174,7 +1498,7 @@ def render_conversation_starters(school: School, service):
             st.markdown(f"""
             <div class="starter-card-send">
                 <div class="starter-topic">Dedicated SEND Provision</div>
-                <div class="starter-detail">"I noticed you have a dedicated {unit_type} - how are you currently staffing it? We work with schools to provide trained SEND specialists for both permanent and cover positions."</div>
+                <div class="starter-detail">"I noticed you have a dedicated {unit_type} - this must require specialist staffing on an ongoing basis. How are you currently managing cover and recruitment for these roles? We work with schools to provide trained SEND specialists for both permanent and cover positions."</div>
                 <div class="starter-source">Source: SEND Data</div>
             </div>
             """, unsafe_allow_html=True)
@@ -1183,8 +1507,16 @@ def render_conversation_starters(school: School, service):
         if ehc >= 10:
             st.markdown(f"""
             <div class="starter-card-send">
-                <div class="starter-topic">EHC Plan Support</div>
-                <div class="starter-detail">"You have {ehc} pupils with EHC plans - that's a significant support requirement. How are you managing their 1:1 support? We have ASD-trained and SEMH-specialist TAs available."</div>
+                <div class="starter-topic">EHC Plan Support Requirements</div>
+                <div class="starter-detail">"You have {ehc} pupils with EHC plans - that's {ehc} legally-mandated support positions you need to fill. These aren't optional - I know schools can face legal challenges if this support isn't in place. How are you managing your 1:1 staffing? We have ASD-trained and SEMH-specialist TAs available who understand the requirements."</div>
+                <div class="starter-source">Source: SEND Data - {ehc} EHC Plans = {ehc} legally-required positions</div>
+            </div>
+            """, unsafe_allow_html=True)
+        elif ehc >= 5:
+            st.markdown(f"""
+            <div class="starter-card-send">
+                <div class="starter-topic">EHC Support Staffing</div>
+                <div class="starter-detail">"With {ehc} pupils on EHC plans, you'll have specific support requirements that must be met. Are you finding it challenging to recruit staff with the right training? We specialise in placing SEND-trained TAs who can hit the ground running."</div>
                 <div class="starter-source">Source: SEND Data</div>
             </div>
             """, unsafe_allow_html=True)
@@ -1192,20 +1524,32 @@ def render_conversation_starters(school: School, service):
         if send.ehc_asd and send.ehc_asd >= 3:
             st.markdown(f"""
             <div class="starter-card-send">
-                <div class="starter-topic">Autism Specialists</div>
-                <div class="starter-detail">"With {send.ehc_asd} pupils with autism, having the right trained support staff is crucial. Are you finding it difficult to recruit autism-trained TAs? We specialise in placing SEND specialists."</div>
-                <div class="starter-source">Source: SEND Data</div>
+                <div class="starter-topic">Autism Specialist Staffing</div>
+                <div class="starter-detail">"With {send.ehc_asd} pupils with autism, having the right trained support staff is crucial - and I know autism specialists are some of the hardest roles to fill. Are you finding recruitment difficult in this area? We have autism-trained TAs who understand sensory needs, communication strategies, and creating structured environments."</div>
+                <div class="starter-source">Source: SEND Data - {send.ehc_asd} pupils with ASD</div>
             </div>
             """, unsafe_allow_html=True)
         
         if send.ehc_semh and send.ehc_semh >= 3:
             st.markdown(f"""
             <div class="starter-card-send">
-                <div class="starter-topic">SEMH Specialists</div>
-                <div class="starter-detail">"I see you have {send.ehc_semh} pupils with SEMH needs - this is one of the hardest areas to recruit for. We have experienced SEMH specialists who understand de-escalation and behaviour management."</div>
-                <div class="starter-source">Source: SEND Data</div>
+                <div class="starter-topic">SEMH Specialist Support</div>
+                <div class="starter-detail">"I see you have {send.ehc_semh} pupils with SEMH needs - this is one of the most challenging areas to staff. These pupils need consistent support from people trained in de-escalation and therapeutic approaches. We have experienced SEMH specialists who understand trauma-informed practice and behaviour management. Would it help to discuss your current staffing situation?"</div>
+                <div class="starter-source">Source: SEND Data - {send.ehc_semh} pupils with SEMH needs</div>
             </div>
             """, unsafe_allow_html=True)
+        
+        # General SEND opportunity if no specific triggers
+        if ehc < 5 and not send.has_sen_unit and not send.has_resourced_provision:
+            total_send = send.get_total_send()
+            if total_send > 0:
+                st.markdown(f"""
+                <div class="starter-card-send">
+                    <div class="starter-topic">SEND Support</div>
+                    <div class="starter-detail">"You have {total_send} pupils with SEND - are you finding it easy to recruit TAs with the right experience? Many schools tell us that finding quality SEND-trained staff is their biggest challenge."</div>
+                    <div class="starter-source">Source: SEND Data</div>
+                </div>
+                """, unsafe_allow_html=True)
     else:
         st.info("No SEND data available for this school")
 
