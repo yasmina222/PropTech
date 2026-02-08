@@ -2,6 +2,7 @@
 School Research Assistant - Streamlit App (v3)
 Redesigned UI with Table View and Deep Dive Pages
 UPDATED: Added Sales Intelligence Summary with contextual alerts
+FIXED: Removed duplicate code boxes, fixed greyed-out titles, cleaned emojis
 """
 
 import streamlit as st
@@ -99,6 +100,24 @@ st.markdown("""
         font-family: 'Inter', sans-serif !important;
         font-weight: 300 !important;
         letter-spacing: -0.3px;
+    }
+    
+    /* FIXED: Conversation starters section titles - bright white, visible */
+    .starters-section-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #ffffff !important;
+        margin-top: 1.5rem;
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.3px;
+    }
+    
+    .starters-section-subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
     }
     
     /* Search box styling */
@@ -426,7 +445,7 @@ st.markdown("""
     }
     
     /* =========================================================================
-       NEW: Sales Intelligence Summary Styles
+       Sales Intelligence Summary Styles
        ========================================================================= */
     
     .intel-summary-container {
@@ -804,7 +823,7 @@ def render_sidebar(stats: dict, data_loader):
                 school = item["school"]
                 col_name, col_remove = st.columns([4, 1])
                 with col_name:
-                    if st.button(f"📍 {school.school_name[:25]}...", key=f"load_{urn}"):
+                    if st.button(f"{school.school_name[:25]}...", key=f"load_{urn}"):
                         st.session_state.view = "deep_dive"
                         st.session_state.selected_urn = urn
                         st.rerun()
@@ -816,7 +835,7 @@ def render_sidebar(stats: dict, data_loader):
             st.markdown("---")
             excel_data = export_shortlist_to_excel()
             st.download_button(
-                label="📥 Download Shortlist",
+                label="Download Shortlist",
                 data=excel_data,
                 file_name=f"school_shortlist_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.spreadsheetml.sheet"
@@ -889,7 +908,7 @@ def render_list_view(schools: list, search_query: str = ""):
     else:
         filtered_schools = schools
     
-    # Sort by AGENCY SPEND (highest first) - this is what matters most to consultants
+    # Sort by AGENCY SPEND (highest first)
     filtered_schools = sorted(
         filtered_schools,
         key=lambda s: s.financial.agency_supply_costs if s.financial and s.financial.agency_supply_costs else 0,
@@ -899,7 +918,7 @@ def render_list_view(schools: list, search_query: str = ""):
     # Limit display
     display_schools = filtered_schools[:50]
     
-    # Table header - UPDATED to show Agency Spend prominently
+    # Table header
     st.markdown("""
     <div class="table-header">
         <div class="table-header-cell">School / MAT Name</div>
@@ -923,7 +942,7 @@ def render_list_view(schools: list, search_query: str = ""):
         with col1:
             st.markdown(f"""
             <div>
-                <span class="school-name">🏫 {school.school_name}</span>
+                <span class="school-name">{school.school_name}</span>
                 <span class="new-badge">NEW</span>
                 <div class="school-urn">URN: {school.urn}</div>
             </div>
@@ -936,7 +955,7 @@ def render_list_view(schools: list, search_query: str = ""):
                 if spend >= 100000:
                     st.markdown(f'<div class="budget-amount" style="color: #ef4444;">🔥 {agency}</div>', unsafe_allow_html=True)
                 elif spend >= 50000:
-                    st.markdown(f'<div class="budget-amount" style="color: #f59e0b;">🎯 {agency}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="budget-amount" style="color: #f59e0b;">{agency}</div>', unsafe_allow_html=True)
                 else:
                     st.markdown(f'<div class="budget-amount">{agency}</div>', unsafe_allow_html=True)
             else:
@@ -962,7 +981,7 @@ def render_list_view(schools: list, search_query: str = ""):
 
 
 # =============================================================================
-# NEW: SALES INTELLIGENCE SUMMARY COMPONENT
+# SALES INTELLIGENCE SUMMARY COMPONENT
 # =============================================================================
 
 def render_sales_intelligence_summary(school: School):
@@ -976,7 +995,7 @@ def render_sales_intelligence_summary(school: School):
     
     st.markdown("""
     <div class="intel-summary-container">
-        <div class="intel-summary-title">📊 Sales Intelligence Summary</div>
+        <div class="intel-summary-title">Sales Intelligence Summary</div>
     """, unsafe_allow_html=True)
     
     # Create three columns for the main intelligence cards
@@ -990,7 +1009,7 @@ def render_sales_intelligence_summary(school: School):
             st.markdown(f"""
             <div class="{card_class}">
                 <div class="intel-card-header">
-                    <span class="intel-card-headline">💰 Agency Spend</span>
+                    <span class="intel-card-headline">Agency Spend</span>
                     <span class="intel-card-icon">{agency['alert_icon']}</span>
                 </div>
                 <div class="intel-card-amount">{agency['amount']}</div>
@@ -1001,7 +1020,7 @@ def render_sales_intelligence_summary(school: School):
         else:
             st.markdown("""
             <div class="intel-card">
-                <div class="intel-card-headline">💰 Agency Spend</div>
+                <div class="intel-card-headline">Agency Spend</div>
                 <div class="intel-card-amount">No Data</div>
                 <div class="intel-card-subtext">Financial data not available</div>
             </div>
@@ -1016,7 +1035,7 @@ def render_sales_intelligence_summary(school: School):
             st.markdown(f"""
             <div class="{card_class}">
                 <div class="intel-card-header">
-                    <span class="intel-card-headline">🎯 EHC Plans</span>
+                    <span class="intel-card-headline">EHC Plans</span>
                     <span class="intel-card-icon">{ehc['alert_icon']}</span>
                 </div>
                 <div class="intel-card-amount">{ehc['count']} Plans</div>
@@ -1030,7 +1049,7 @@ def render_sales_intelligence_summary(school: School):
                 st.markdown(f"""
                 <div class="intel-card intel-card-{send_summary['alert_type']}">
                     <div class="intel-card-header">
-                        <span class="intel-card-headline">🎯 SEND Pupils</span>
+                        <span class="intel-card-headline">SEND Pupils</span>
                         <span class="intel-card-icon">{send_summary['alert_icon']}</span>
                     </div>
                     <div class="intel-card-amount">{send_summary['total']} Pupils</div>
@@ -1041,7 +1060,7 @@ def render_sales_intelligence_summary(school: School):
             else:
                 st.markdown("""
                 <div class="intel-card">
-                    <div class="intel-card-headline">🎯 SEND Data</div>
+                    <div class="intel-card-headline">SEND Data</div>
                     <div class="intel-card-amount">No Data</div>
                     <div class="intel-card-subtext">SEND information not available</div>
                 </div>
@@ -1051,11 +1070,11 @@ def render_sales_intelligence_summary(school: School):
     with col3:
         infra = intel.get("infrastructure_insight")
         if infra:
-            # Show SEN Unit / Resourced Provision - this is HOT
+            # Show SEN Unit / Resourced Provision
             st.markdown(f"""
             <div class="intel-card intel-card-hot">
                 <div class="intel-card-header">
-                    <span class="intel-card-headline">🏫 SEND Infrastructure</span>
+                    <span class="intel-card-headline">SEND Infrastructure</span>
                     <span class="intel-card-icon">{infra['alert_icon']}</span>
                 </div>
                 <div class="intel-card-amount">{' + '.join(infra['provisions'])}</div>
@@ -1071,7 +1090,7 @@ def render_sales_intelligence_summary(school: School):
                 st.markdown(f"""
                 <div class="{card_class}">
                     <div class="intel-card-header">
-                        <span class="intel-card-headline">📈 Total Staffing</span>
+                        <span class="intel-card-headline">Total Staffing</span>
                         <span class="intel-card-icon">{staffing['alert_icon']}</span>
                     </div>
                     <div class="intel-card-amount">{staffing['amount']}</div>
@@ -1082,7 +1101,7 @@ def render_sales_intelligence_summary(school: School):
             else:
                 st.markdown("""
                 <div class="intel-card">
-                    <div class="intel-card-headline">📈 Staffing Budget</div>
+                    <div class="intel-card-headline">Staffing Budget</div>
                     <div class="intel-card-amount">No Data</div>
                     <div class="intel-card-subtext">Financial data not available</div>
                 </div>
@@ -1094,7 +1113,7 @@ def render_sales_intelligence_summary(school: School):
         why_call_text = school.get_why_call_summary()
         st.markdown(f"""
         <div class="why-call-box">
-            <div class="why-call-title">📞 Why Call This School</div>
+            <div class="why-call-title">WHY CALL THIS SCHOOL</div>
             <div class="why-call-text">{why_call_text}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -1109,7 +1128,7 @@ def render_sales_intelligence_summary(school: School):
 def render_deep_dive(school: School, service):
     """Render the deep dive page for a specific school"""
     
-    # Back button - must clear URL params too!
+    # Back button
     if st.button("← Back to Search", type="primary"):
         st.session_state.view = "list"
         st.session_state.selected_urn = None
@@ -1133,7 +1152,7 @@ def render_deep_dive(school: School, service):
         st.markdown(f"**Priority**<br>{get_priority_badge(priority)}", unsafe_allow_html=True)
     with col5:
         if is_in_shortlist(school.urn):
-            if st.button("✓ In Shortlist", key="shortlist_toggle"):
+            if st.button("In Shortlist", key="shortlist_toggle"):
                 remove_from_shortlist(school.urn)
                 st.rerun()
         else:
@@ -1143,17 +1162,17 @@ def render_deep_dive(school: School, service):
     
     st.markdown("---")
     
-    # NEW: Sales Intelligence Summary - THE HERO SECTION
+    # Sales Intelligence Summary - THE HERO SECTION
     render_sales_intelligence_summary(school)
     
     st.markdown("---")
     
-    # Main content in tabs
+    # Main content in tabs - CLEANED: no emojis in tab labels
     tab1, tab2, tab3, tab4 = st.tabs([
-        "📞 Contact & Details",
-        "💰 Financial Data",
-        "🎯 SEND Opportunities",
-        "💬 Conversation Starters"
+        "Contact & Details",
+        "Financial Data",
+        "SEND Opportunities",
+        "Conversation Starters"
     ])
     
     with tab1:
@@ -1177,7 +1196,7 @@ def render_contact_details(school: School):
     with col1:
         st.markdown("""
         <div class="info-card">
-            <div class="info-card-title">📋 School Information</div>
+            <div class="info-card-title">School Information</div>
         """, unsafe_allow_html=True)
         
         details = [
@@ -1200,7 +1219,7 @@ def render_contact_details(school: School):
     with col2:
         st.markdown("""
         <div class="info-card">
-            <div class="info-card-title">👤 Key Contact</div>
+            <div class="info-card-title">Key Contact</div>
         """, unsafe_allow_html=True)
         
         if school.headteacher:
@@ -1235,7 +1254,7 @@ def render_contact_details(school: School):
     # Address
     st.markdown("""
     <div class="info-card">
-        <div class="info-card-title">📍 Address</div>
+        <div class="info-card-title">Address</div>
     """, unsafe_allow_html=True)
     
     address = school.get_full_address() or "Address not available"
@@ -1279,20 +1298,20 @@ def render_financial_details(school: School):
         if agency_insight['alert_type'] == 'hot':
             st.success(f"🔥 **{agency_insight['headline']}** - {agency_insight['sales_action']}")
         elif agency_insight['alert_type'] == 'warm':
-            st.info(f"🎯 **{agency_insight['headline']}** - {agency_insight['sales_action']}")
+            st.info(f"**{agency_insight['headline']}** - {agency_insight['sales_action']}")
         elif agency_insight['alert_type'] == 'investigate':
-            st.warning(f"🔍 **{agency_insight['headline']}** - {agency_insight['sales_action']}")
+            st.warning(f"**{agency_insight['headline']}** - {agency_insight['sales_action']}")
         
         st.markdown("---")
         
         # Cost breakdown
         st.markdown("""
         <div class="info-card">
-            <div class="info-card-title">💷 Cost Breakdown</div>
+            <div class="info-card-title">Cost Breakdown</div>
         """, unsafe_allow_html=True)
         
         costs = [
-            ("Agency Supply (E26) ⭐", fin.agency_supply_costs, True),
+            ("Agency Supply (E26) - KEY", fin.agency_supply_costs, True),
             ("Total Staffing Costs", fin.total_teaching_support_costs, False),
             ("Teaching Staff (E01)", fin.teaching_staff_costs, False),
             ("Supply Teaching (E02)", fin.supply_teaching_costs, False),
@@ -1343,36 +1362,36 @@ def render_send_details(school: School):
         if ehc_insight['alert_type'] == 'hot':
             st.success(f"🔥 **{ehc_insight['headline']}** - {ehc_insight['sales_action']}")
         elif ehc_insight['alert_type'] == 'warm':
-            st.info(f"⚡ **{ehc_insight['headline']}** - {ehc_insight['sales_action']}")
+            st.info(f"**{ehc_insight['headline']}** - {ehc_insight['sales_action']}")
         elif ehc_insight['alert_type'] == 'medium':
-            st.info(f"🎯 **{ehc_insight['headline']}** - {ehc_insight['sales_action']}")
+            st.info(f"**{ehc_insight['headline']}** - {ehc_insight['sales_action']}")
         
         # Special provision badges
         if send.has_sen_unit or send.has_resourced_provision:
             st.markdown("---")
             badges_html = ""
             if send.has_sen_unit:
-                badges_html += '<span class="sen-badge">🏫 SEN Unit</span>'
+                badges_html += '<span class="sen-badge">SEN Unit</span>'
             if send.has_resourced_provision:
-                badges_html += '<span class="sen-badge">📚 Resourced Provision</span>'
+                badges_html += '<span class="sen-badge">Resourced Provision</span>'
             st.markdown(f'<div style="margin: 1rem 0;">{badges_html}</div>', unsafe_allow_html=True)
             
             infra_insight = send.get_send_infrastructure_insight()
             if infra_insight:
-                st.warning(f"🏫 **{infra_insight['headline']}** - {infra_insight['sales_action']}")
+                st.warning(f"**{infra_insight['headline']}** - {infra_insight['sales_action']}")
         
         st.markdown("---")
         
         # EHC breakdown
         st.markdown("""
         <div class="info-card">
-            <div class="info-card-title">📊 EHC Plan Breakdown by Need</div>
+            <div class="info-card-title">EHC Plan Breakdown by Need</div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div style="background-color: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem;">
             <span style="font-size: 0.85rem; color: #93c5fd;">
-                💡 <strong>Remember:</strong> Each EHC Plan represents a legally-mandated support position.
+                <strong>Remember:</strong> Each EHC Plan represents a legally-mandated support position.
             </span>
         </div>
         """, unsafe_allow_html=True)
@@ -1413,9 +1432,13 @@ def render_send_details(school: School):
 def render_conversation_starters(school: School, service):
     """Render conversation starters with generation buttons"""
     
-    # Financial starters section
-    st.markdown("### 💰 Financial Conversation Starters")
-    st.caption("Based on staffing budget and expenditure data")
+    # =========================================================================
+    # Financial starters section - FIXED: visible title using custom HTML class
+    # =========================================================================
+    st.markdown("""
+    <div class="starters-section-title">Financial Conversation Starters</div>
+    <div class="starters-section-subtitle">Based on staffing budget and expenditure data</div>
+    """, unsafe_allow_html=True)
     
     financial_starters = [s for s in school.conversation_starters if not (s.source and s.source.startswith("http"))]
     
@@ -1428,14 +1451,13 @@ def render_conversation_starters(school: School, service):
                 <div class="starter-source">Source: {starter.source or 'Financial Data'}</div>
             </div>
             """, unsafe_allow_html=True)
-            
-            st.code(starter.detail, language=None)
+            # REMOVED: st.code() duplicate box
     
     col1, col2 = st.columns([1, 3])
     with col1:
         num_fin = st.number_input("Count", min_value=1, max_value=5, value=3, key="num_fin")
     with col2:
-        if st.button("🔄 Generate Financial Starters", type="primary"):
+        if st.button("Generate Financial Starters", type="primary"):
             with st.spinner("Generating from financial data..."):
                 updated_school = service.get_school_intelligence(
                     school.school_name, force_refresh=True, num_starters=num_fin
@@ -1448,9 +1470,13 @@ def render_conversation_starters(school: School, service):
     
     st.markdown("---")
     
-    # Ofsted starters section
-    st.markdown("### 📋 Ofsted Conversation Starters")
-    st.caption("Based on latest Ofsted inspection report")
+    # =========================================================================
+    # Ofsted starters section - FIXED: visible title using custom HTML class
+    # =========================================================================
+    st.markdown("""
+    <div class="starters-section-title">Ofsted Conversation Starters</div>
+    <div class="starters-section-subtitle">Based on latest Ofsted inspection report</div>
+    """, unsafe_allow_html=True)
     
     ofsted_starters = [s for s in school.conversation_starters if s.source and s.source.startswith("http")]
     
@@ -1463,15 +1489,14 @@ def render_conversation_starters(school: School, service):
                 <div class="starter-source">Source: <a href="{starter.source}" target="_blank" style="color: #60a5fa;">View Ofsted Report</a></div>
             </div>
             """, unsafe_allow_html=True)
-            
-            st.code(starter.detail, language=None)
+            # REMOVED: st.code() duplicate box
     
     if school.ofsted and school.ofsted.rating:
         st.info(f"**Current Rating:** {school.ofsted.rating} | **Inspected:** {school.ofsted.inspection_date or 'Unknown'}")
     
-    st.warning("⏱️ Note: Fetching Ofsted report takes up to 60 seconds (PDF download & analysis)")
+    st.caption("Note: Fetching Ofsted report takes up to 60 seconds (PDF download & analysis)")
     
-    if st.button("🔄 Fetch Ofsted & Generate Starters", type="secondary"):
+    if st.button("Fetch Ofsted & Generate Starters", type="secondary"):
         with st.spinner("Downloading and analyzing Ofsted PDF..."):
             updated_school = service.get_school_intelligence_with_ofsted(
                 school.school_name, force_refresh=True, num_starters=3, include_ofsted=True
@@ -1484,9 +1509,13 @@ def render_conversation_starters(school: School, service):
     
     st.markdown("---")
     
-    # SEND starters section
-    st.markdown("### 🎯 SEND Conversation Starters")
-    st.caption("Based on SEND data - auto-generated from EHC and SEN Support data")
+    # =========================================================================
+    # SEND starters section - FIXED: visible title using custom HTML class
+    # =========================================================================
+    st.markdown("""
+    <div class="starters-section-title">SEND Conversation Starters</div>
+    <div class="starters-section-subtitle">Based on SEND data - auto-generated from EHC and SEN Support data</div>
+    """, unsafe_allow_html=True)
     
     if school.send and school.send.has_send_data():
         send = school.send
